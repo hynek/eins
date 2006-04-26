@@ -1,0 +1,29 @@
+eins - A tool for measuring network-bandwidths and -latencies.
+
+eins is not sockping!
+
+Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
+
+Based on `sockping' by Lars Schneidenbach <lschneid@cs.uni.potsdam.de>.
+
+Parameters:
+
+Client:
+  All:
+    -i numtries: Number of measures. Default is 54.
+
+  Mods:
+    -t: TCP
+    -u: UDP
+    -b: BMI
+
+  Options:
+
+    TCP & UDP:
+      -6: Use IPv6
+      -h header-size: Prepend with a header
+      -p port: Portnumber to use. Default is 8910.
+
+Server:
+  Mods: same as client
+  Options: Same as client excluding -h.
