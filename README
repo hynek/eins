@@ -13,9 +13,9 @@ Client:
     -i numtries: Number of measures. Default is 54.
 
   Mods:
-    -t: TCP
-    -u: UDP
-    -b: BMI
+    -t t: TCP
+       u: UDP
+       b: BMI
 
   Options:
 
@@ -23,7 +23,3 @@ Client:
       -6: Use IPv6
       -h header-size: Prepend with a header
       -p port: Portnumber to use. Default is 8910.
-
-Server:
-  Mods: same as client
-  Options: Same as client excluding -h.
