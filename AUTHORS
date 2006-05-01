@@ -1,0 +1,7 @@
+Hynek Schlawack <hs+eins@ox.cx> wrote `eins' by heavily generalizing
+`sockping'. He wrote the modules for TCP, UDP and BMI. He is also the
+current maintainer.
+
+Lars Schneidenbach <lschneid@cs.uni-potsdam.de> wrote the original
+`sockping' which still dominates `eins'' operating principle. He is also
+the author of the original measure code.
