@@ -23,22 +23,40 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <stdbool.h>
  
 // PVFS
 #include <bmi.h>
 
 // Own
-#include "bmi.h"
+#include "mod_bmi.h"
 #include "util.h"
 #include "measure.h"
 
-// Source-scope-vars for the client
+const net_mod mod_bmi = { "BMI",
+			  "bmi",
+			  "",
+			  "\tNo specific options.",
+			  bmi_handle_arg,
+			  bmi_init,
+			  bmi_measure,
+			  bmi_serve,
+			  bmi_cleanup };
+
+// Source scope variables for the client
 static char *buf_Snd;
 static char *buf_Rcv;
 static unsigned int Tries;
 static unsigned int Size;
 static bmi_context_id Context;
 static PVFS_BMI_addr_t Server;
+
+bool
+bmi_handle_arg(char opt, char *arg)
+{
+    // No BMI specific options
+    return false;
+}
 
 double
 bmi_measure()
@@ -90,37 +108,53 @@ bmi_cleanup()
     BMI_finalize();
 }
 
-struct ec_mod *
-bmi_init(struct e_args *ea)
+bool
+bmi_init(mod_args *ma)
 {
-    struct ec_mod *em = safe_alloc(sizeof(struct ec_mod));
     int ret;
 
-    // Setup hooks
-    em->measure = bmi_measure;
-    em->cleanup = bmi_cleanup;
-
     // Set prefs
-    Tries = ea->tries;
-    Size = ea->size;
+    Tries = ma->tries;
+    Size = ma->size;
 
     // Init & Resolve
-#warning "TODO: proper error-handling"
-    assert(BMI_initialize(ea->bmi_method, NULL, 0) == 0);
-    assert(BMI_open_context(&Context) == 0);
-    assert(BMI_addr_lookup(&Server, ea->target) == 0);
+    char *method;
+    if (!strncmp(ma->target, "tcp", 3)) {
+	method = "bmi_tcp";
+    } else {
+	L("Client: Unknown BMI method.");
+	return false;
+    }
 
-    buf_Snd = BMI_memalloc(Server, ea->size, BMI_SEND);
-    memcpy(buf_Snd, ea->payload, ea->size);
-    buf_Rcv = BMI_memalloc(Server, ea->size, BMI_RECV);    
+    if (BMI_initialize(method, NULL, 0) != 0) {
+	L("Client: BMI_initialize() failed.");
+	return false;
+    }
+
+    if (BMI_open_context(&Context) != 0) {
+	L("Client: BMI_open_context() failed.");
+	return false;
+    }
+
+    if (BMI_addr_lookup(&Server, ma->target) != 0) {
+	L("Client: BMI_addr_lookup() failed.");
+	return false;
+    }
+
+    buf_Snd = BMI_memalloc(Server, ma->size, BMI_SEND);
+    memcpy(buf_Snd, ma->payload, ma->size);
+    buf_Rcv = BMI_memalloc(Server, ma->size, BMI_RECV);    
 
     
     // Handshake
     bmi_op_id_t bmi_id;
 
     // Send size and num of tries
-    struct e_handshake eh = { ea->tries, ea->size, 0 };
-    BMI_post_sendunexpected(&bmi_id, Server, &eh, sizeof(eh), BMI_EXT_ALLOC, 0, NULL, Context);
+    handshake eh = { ma->tries, ma->size };
+    if (BMI_post_sendunexpected(&bmi_id, Server, &eh, sizeof(eh), BMI_EXT_ALLOC, 0, NULL, Context) != 0) {
+	L("Client: BMI_post_sendunexpected() failed while handshake.");
+	return false;
+    }
 
     int error_code, outcount;
     bmi_size_t actual_size;
@@ -128,13 +162,12 @@ bmi_init(struct e_args *ea)
         ret = BMI_test(bmi_id, &outcount, &error_code,
                        &actual_size, NULL, 100, Context);
     } while (ret == 0 && outcount == 0);
+    if (ret < 0) {
+	L("Client: BMI_test() failed while handshake");
+	return false;
+    }
 
     // Wait for ok
-/*     struct BMI_unexpected_info u_info; */
-/*     do { */
-/*         ret = BMI_testunexpected(1, &outcount, &u_info, 100); */
-/*     } while (ret == 0 && outcount == 0); */
-    
     int answer;
     BMI_post_recv(&bmi_id, Server, &answer, sizeof(answer), &actual_size, BMI_EXT_ALLOC, 0, NULL, Context);
     do {
@@ -147,23 +180,30 @@ bmi_init(struct e_args *ea)
 	return 0;
     }
 
-    return answer == 1 ? em : 0;
+    return answer == 1;
 }
 
-int
-bmi_serve(struct e_args *ea)
+bool
+bmi_serve(mod_args *ma)
 {
 #warning "TODO: Make method supplyable"
-    char * method = "bmi_tcp";
+    char *method = "bmi_tcp";
     struct BMI_unexpected_info u_info;
 #warning "TODO: Make local_address dynamic"
-    char *local_address = "tcp://kato:3334";
+    char *local_address = "tcp://127.0.0.1:3334";
     int outcount = 0, error_code = 0, ret;
     bmi_context_id context;
 
     // Init
-    assert(BMI_initialize(method, local_address, BMI_INIT_SERVER) == 0);
-    assert(BMI_open_context(&context) == 0);
+    if (BMI_initialize(method, local_address, BMI_INIT_SERVER) != 0) {
+	L("Server: BMI_initialize() failed.");
+	return false;
+    }
+    
+    if (BMI_open_context(&context) != 0) {
+	L("Server: BMI_open_context() failed.");
+	return false;
+    }
 
     while (1) {
 	// test unexpected (ie. wait for client)
@@ -171,13 +211,19 @@ bmi_serve(struct e_args *ea)
 	    ret = BMI_testunexpected(1, &outcount, &u_info, 100);
     	} while (ret == 0 && outcount == 0);
 	if (ret < 0)
-	    return (-1);
+	    return false;
 	
 	PVFS_BMI_addr_t client = u_info.addr;
-	struct e_handshake *eh = u_info.buffer;
+	handshake *h = u_info.buffer;
 
-#warning "TODO: Check handshake for sense"
-	int reply = 1;
+	int reply;
+
+	if (h->size > 0 && h->tries > 0) {
+	    reply = 1;
+	} else {
+	    reply = 0;
+	}
+
 	bmi_op_id_t bmi_id;
 	bmi_size_t actual_size;
 
@@ -191,18 +237,22 @@ bmi_serve(struct e_args *ea)
 	    } while (ret == 0 && outcount == 0);
 	}
 	if (ret < 0 || error_code != 0) {
-	    fprintf(stderr, "Server: BMI send error while handshake: %d\n", error_code);
-	    return (-1);
+	    L("Server: BMI send error while handshake: %d\n", error_code);
+	    return false;
+	}
+
+	if (!reply) {
+	    L("Server: Handshake failed due to invalid values.");
+	    continue;
 	}
 		
 	// Alloc buffers
-	char *buf_snd = BMI_memalloc(client, eh->size, BMI_SEND);
-	char *buf_rcv = BMI_memalloc(client, eh->size, BMI_RECV);
-	//randomize_buffer(buf_rcv, eh->size);
+	char *buf_snd = BMI_memalloc(client, h->size, BMI_SEND);
+	char *buf_rcv = BMI_memalloc(client, h->size, BMI_RECV);
 	
-	for (int i = 0; i < eh->tries; i++) {
+	for (int i = 0; i < h->tries; i++) {
 	    ret = BMI_post_recv(&bmi_id, client, buf_rcv,
-				eh->size, &actual_size, BMI_PRE_ALLOC, 0,
+				h->size, &actual_size, BMI_PRE_ALLOC, 0,
 				NULL, context);
 	    error_code = 0;
 	    if (ret == 0) {
@@ -212,17 +262,17 @@ bmi_serve(struct e_args *ea)
 		} while (ret == 0 && outcount == 0);
 	    }
 	    if (ret < 0 || error_code != 0) {
-		fprintf(stderr, "Server: BMI recv error: %d.\n", error_code);
-		return (-1);
+		L("Server: BMI recv error: %d.\n", error_code);
+		return false;
 	    }
 
 	    // In the first iteration, we copy the buffer over so we really send
 	    // the same data. The slightly worse (well: O(N))
             // measure will be filtered out anyway.
-	    if (__unlikely(i == 0)) memcpy(buf_snd, buf_rcv, eh->size);
+	    if (__unlikely(i == 0)) memcpy(buf_snd, buf_rcv, h->size);
 			
 	    ret = BMI_post_send(&bmi_id, client, buf_snd,
-	    			eh->size, BMI_PRE_ALLOC, 0, NULL, context);
+	    			h->size, BMI_PRE_ALLOC, 0, NULL, context);
 	    error_code = 0;
 	    if (ret == 0) {
 		do {
@@ -231,18 +281,18 @@ bmi_serve(struct e_args *ea)
 		} while (ret == 0 && outcount == 0);
 	    }
 	    if (ret < 0 || error_code != 0) {
-        	fprintf(stderr, "Server: BMI send error.\n");
-		return (-1);
+        	L("Server: BMI send error.");
+		return false;
 	    }
 	}
 
 	// Clean up
-	BMI_memfree(client, buf_snd, eh->size, BMI_SEND);
-	BMI_memfree(client, buf_rcv, eh->size, BMI_RECV);
+	BMI_memfree(client, buf_snd, h->size, BMI_SEND);
+	BMI_memfree(client, buf_rcv, h->size, BMI_RECV);
     }
 
     BMI_close_context(context);
     BMI_finalize();
 
-    return 0;
+    return true;
 }

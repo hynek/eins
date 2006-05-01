@@ -23,20 +23,42 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 
 // POSIX
 #include <netdb.h>
-#include <sys/socket.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/types.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 // Own
 #include "eins.h"
-#include "ip.h"
+#include "util_ip.h"
 #include "util.h"
 #include "measure.h"
+
+bool
+ip_handle_arg(ip_prefs *p, char opt, char *arg)
+{
+    switch (opt) {
+    case '6':
+	p->v6 = true;
+	return true;
+	    
+    case 'P':
+	p->port = safe_strdup(arg);
+	return true;
+	    
+    case 'H':
+	p->hdr_size = atoi(arg);
+	return true;
+	
+    default:
+	return false;
+    }
+}
 
 int
 ip_connect(char *host, char *port, struct addrinfo *hints)
@@ -45,7 +67,7 @@ ip_connect(char *host, char *port, struct addrinfo *hints)
 
     int rc = getaddrinfo(host, port, hints, &ai);
     if (rc != 0) {
-	puts(gai_strerror(rc));
+	L(gai_strerror(rc));
 	exit(1);
     }
 	
@@ -58,7 +80,7 @@ ip_connect(char *host, char *port, struct addrinfo *hints)
     }
 
     if (tmp == NULL) {
-	perror("client, connect"); 
+	LE("client, connect"); 
 	return 0;
     }
 
@@ -68,7 +90,7 @@ ip_connect(char *host, char *port, struct addrinfo *hints)
 }
 
 double
-ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iovec *hdr_vec, ssize_t frag_size)
+ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iovec *hdr_vec, size_t frag_size)
 {
     time_586 ta, tb;
     size_t bytes;
@@ -77,12 +99,12 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 	gamma_time(ta);
 
 	if (__unlikely(writev(sd, hdr_vec, 2) == -1)) {
-	    perror("client, writev"); 
+	    LE("client, writev"); 
 	    exit(1);
 	}
 	
 	if (__unlikely((bytes = readv(sd, hdr_vec, 2)) == -1)) {
-	    perror("client, readv"); 
+	    LE("client, readv"); 
 	    exit(1);
 	}
 
@@ -98,16 +120,14 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 		      (bytes + frag_size) > size ? size - bytes : frag_size,
 		      0);
 	    if (rc == -1) {
-		perror("measure, send"); 
-		exit(1);
+		XLE("measure, send"); 
 	    }
 	}
 
 	for (bytes = 0; bytes < size; bytes += rc) {
 	    rc = recv(sd, payload + bytes, size - bytes, 0);
 	    if(rc == -1) {
-		perror("measure, recv"); 
-		exit(1);
+		XLE("measure, recv"); 
 	    }
 	}
 
@@ -117,32 +137,31 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
     return gamma_time_diff(tb, ta);
 }
 
-int
-ip_handshake_client(int sd, struct e_handshake *eh)
+bool
+ip_handshake_client(int sd, handshake *eh, size_t size)
 {
     int response;
 
-    if (send(sd, eh, sizeof(struct e_handshake) + 1, 0) == -1) {
-	perror("handshake, send"); 
-	exit(1);
+    if (send(sd, eh, size, 0) == -1) {
+	XLE("handshake, send"); 
     }
     if (recv(sd, &response, sizeof(response), 0) == -1) {
-	perror("handshake, recv"); 
-	exit(1);
+	XLE("handshake, recv"); 
     }
 
     return response;
 }
 
-int
-ip_handshake_server(int sd, struct e_handshake *eh)
+bool
+ip_handshake_server(int sd, handshake *eh, size_t size)
 {
     int response;
 
-    if (recv(sd, eh, sizeof(struct e_handshake), 0) == -1) {
-	perror("server, recv");
+    if (recv(sd, eh, size, 0) == -1) {
+	LE("server, recv");
 	return 0;
     }
+
     if (eh->size > 0 && eh->tries > 0) {
 	response = 1;
     } else {
@@ -150,7 +169,7 @@ ip_handshake_server(int sd, struct e_handshake *eh)
     }
 
     if(send(sd, &response, sizeof(response), 0) == -1) {
-	perror("server, send");
+	LE("server, send");
 	return 0;
     }
 

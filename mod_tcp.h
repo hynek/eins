@@ -1,5 +1,5 @@
 /* 
- * eins - A tool for measuring network-bandwidths and -latencies.
+ * eins - A tool for benchmarking networks.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
  * This program is free software; you can redistribute it and/or
@@ -18,12 +18,17 @@
  * 02110-1301, USA.
  */
 
-#ifndef UDP_H
-#define UDP_H
+#ifndef MOD_TCP_H
+#define MOD_TCP_H
 
-#include "eins.h"
+#include "mods.h"
 
-struct ec_mod * udp_init(struct e_args *ea);
-int udp_serve(struct e_args *ea);
+bool tcp_handle_arg(char opt, char *arg);
+bool tcp_init(mod_args *ma);
+double tcp_measure();
+void tcp_cleanup();
+bool tcp_serve(mod_args *ma);
 
-#endif // UDP_H
+extern const net_mod mod_tcp;
+
+#endif // MOD_TCP_H

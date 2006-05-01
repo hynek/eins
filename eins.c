@@ -1,5 +1,5 @@
 /* 
- * eins - A tool for measuring network-bandwidths and -latencies.
+ * eins - A tool for benchmarking networks.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
  * This program is free software; you can redistribute it and/or
@@ -30,95 +30,104 @@
 // Own
 #include "eins.h"
 #include "measure.h"
+#include "modules.h"
 #include "util.h"
-
-// Mods
-#include "ip.h"
-#include "tcp.h"
-#include "udp.h"
-#include "bmi.h"
 
 #define DEF_TRIES 54
 
-#define USAGE "eins [-s] -t [tcp/udp [-p port] [-h header-size] [-f fragsize] [-6]]/[bmi] [-i numtries] [host len]"
+#define USAGE "Client: eins -t type [-i numtries] host len\nServer: eins -s -t type"
 
 static void
 usage_and_die(void)
 {
     puts(USAGE);
+
+    puts("\nAvailable modules with options. The word in brackets is the type for the -t option.");
+
+    for (int i = 0; Modules[i]; i++) {
+	printf("\n%s (%s):\n%s\n", Modules[i]->name, Modules[i]->type , Modules[i]->usage);
+    }
+
     exit(1);
 }
 
-void
-parse_args(int argc, char **argv, struct e_args *ea)
+#define DEF_OPTS "st:i:"
+static char *
+build_optstr(const net_mod *m[])
 {
+    size_t len = strlen(DEF_OPTS);
+    for (int i = 0; m[i]; i++) {
+	len += strlen(m[i]->opts);
+    }
+    
+    char *str = safe_alloc(len + 1);
+    strcpy(str, DEF_OPTS);
+
+    for (int i = 0; m[i]; i++) {
+	// Double entries seem to be okay as long they don't
+        // contradict.
+	strcat(str, m[i]->opts);
+    }
+
+    return str;
+}
+
+const net_mod *
+parse_args(int argc, char * argv[], mod_args *ma)
+{
+    const net_mod *nm = NULL;
+
+    char *optstr = build_optstr(Modules);
+
     char opt;
-    while ((opt = getopt(argc, argv, "st:6p:h:i:f:")) != -1) {
+    while ((opt = getopt(argc, argv, optstr)) != -1) {
 	// Mode
 	switch (opt) {
 	case 's':
-	    ea->mode = EINS_SERVER;
+	    ma->mode = EINS_SERVER;
 	    break;
 	    
 	    // Mods
 	case 't':
-	    switch (optarg[0]) {
-	    case 't':
-		ea->init = tcp_init;
-		ea->serve = tcp_serve;
-		break;
-	    case 'u':
-		ea->init = udp_init;
-		ea->serve = udp_serve;
-		break;
-#ifndef NO_BMI
-	    case 'b':
-		ea->init = bmi_init;
-		ea->serve = bmi_serve;
-#warning "TODO: Let BMI method be an argument."
-		ea->bmi_method = "bmi_tcp";
-#endif // NO_BMI
+	    for (int i = 0; Modules[i]; i++) {
+		if (!strncmp(Modules[i]->type, optarg, strlen(optarg))) {
+		    nm = Modules[i];
+		}
 	    }
 	    break;
 
 	case 'i':
-	    ea->tries = atoi(optarg);
-	    break;
-
-
-	// IP-Based
-	case '6':
-	    ea->ip_v6 = 1;
-	    break;
-	case 'p':
-	    ea->ip_port = safe_strdup(optarg);
-	    break;
-	case 'h':
-	    ea->ip_hdr_size = atoi(optarg);
-	    break;
-
-	// UDP
-	case 'f':
-	    ea->udp_frag_size = atoi(optarg);
+	    ma->tries = atoi(optarg);
 	    break;
 
 	default:
-	    usage_and_die();
+	    if (nm) {
+		if (!nm->handle_arg( opt, optarg)) {
+		    return NULL;
+		}
+	    } else {
+		L("No network type specified.");
+		return NULL;
+	    }
 	}
     }
 
-    if ((ea->mode == EINS_CLIENT) && ((argc != (optind + 2)) || !ea->init)) {
+    free(optstr); // Possible memleak but neglectible
+
+    if (!nm) {
+	usage_and_die();
+    }
+
+    if ((ma->mode == EINS_CLIENT) && ((argc != (optind + 2)))) {
 	usage_and_die();
     }
   
-    if (ea->mode == EINS_CLIENT) {
-	ea->target = argv[optind];
-	ea->size = atoi(argv[optind + 1]);
+    if (ma->mode == EINS_CLIENT) {
+	ma->target = argv[optind];
+	ma->size = atoi(argv[optind + 1]);
     }
 
-    if (ea->udp_frag_size == 0 || ea->udp_frag_size > ea->size) {
-	ea->udp_frag_size = ea->size;
-    }
+    return nm;
 }
 
 /******************************************************************************
@@ -127,17 +136,22 @@ parse_args(int argc, char **argv, struct e_args *ea)
 int
 main(int argc, char **argv)
 {
-    struct e_args ea = { EINS_CLIENT, NULL, NULL, NULL, DEF_TRIES, 0, IP_DEF_PORT, 0 };
-    struct ec_mod *em = NULL;
-
+    mod_args ma = { EINS_CLIENT, NULL, DEF_TRIES, 0, NULL };
+    const net_mod *nm;
     long long i;
 
     srand((unsigned int) time(NULL));
 
-    parse_args(argc, argv, &ea);
+    if (!log_open(NULL)) {
+	puts("Failed to open log file.");
+	exit(1);
+    }
 
-    if (ea.mode == EINS_SERVER) {
-	return !ea.serve(&ea);
+    nm = parse_args(argc, argv, &ma);
+    if (!nm) exit(1);
+
+    if (ma.mode == EINS_SERVER) {
+	return !nm->serve(&ma);
     }
 
     // Set up time-measurement
@@ -146,7 +160,7 @@ main(int argc, char **argv)
 
     init_timer();
 
-    alltime = safe_alloc(ea.tries * sizeof(double));
+    alltime = safe_alloc(ma.tries * sizeof(double));
 
     // Obtain time which is spent on measuring
     gamma_time(ta);
@@ -154,25 +168,29 @@ main(int argc, char **argv)
     measuredelta = gamma_time_diff(tb, ta);
 
     // Set up payload
-    ea.payload = safe_alloc(ea.size);
-    randomize_buffer(ea.payload, ea.size);
+    ma.payload = safe_alloc(ma.size);
+    randomize_buffer(ma.payload, ma.size);
 
     // Set up mod
-    em = ea.init(&ea);
-    if (!em) {
-	puts("Init/Handshake failed.");
-	exit(1);
-    }
+    if (!nm->init(&ma))
+	XL("Init/Handshake failed.");
 
     // Main measure-loop
-    for (i = 0; i < ea.tries; i++) {
-	alltime[i] = (em->measure() - measuredelta) / 2;
+    for (i = 0; i < ma.tries; i++) {
+	alltime[i] = (nm->measure() - measuredelta) / 2;
     }
 
     // Compute and print data
     double min, max, med, var;
-    mean_variance(ea.tries, alltime, &min, &max, &med, &var);
-    printf("%15d%16f%16f\n", ea.size + ea.ip_hdr_size, med, ea.size / med);
+    mean_variance(ma.tries, alltime, &min, &max, &med, &var);
 
-    em->cleanup();
+    // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
+    // but we want `bytes * 1024^2 / s'
+    double bw = ((ma.size * 1000 * 1000 ) / med) / (1024*1024);
+
+    printf("%15d%16f%16f\n", ma.size, med, bw);
+
+    nm->cleanup();
+
+    log_close();
 }

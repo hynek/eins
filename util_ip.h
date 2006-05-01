@@ -18,47 +18,31 @@
  * 02110-1301, USA.
  */
 
-/* ISO */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#ifndef UTIL_IP_H
+#define UTIL_IP_H
 
-static void
-assert_alloc(void *p)
-{
-    if (p == NULL) {
-	puts("Out of memory.");
-	
-	exit(1);
-    }
-}
+#include <netdb.h>
 
-void *
-safe_alloc(size_t size)
-{
-    void *p;
+#define IP_DEF_PORT "8910"
+#define IP_OPTS "6P:H:"
+#define IP_USAGE "\t-6: Use IPv6\n" \
+    "\t-P port: Use `port'\n" \
+    "\t-H size: Prepend with a header of `size' bytes"
+#define IP_DEF_SOCKET_BUFF 524288
 
-    p = malloc(size);
-    assert_alloc(p);
+typedef struct {
+    bool v6;
+    char *port;
+    size_t hdr_size;
+} ip_prefs;
 
-    return p;
-}
+typedef struct {
+} ip_handshake;
 
-char *
-safe_strdup(const char *s)
-{
-    char *p = strdup(s);
-    assert_alloc(p);
+int ip_connect(char *host, char *port, struct addrinfo *hints);
+double ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iovec *hdr_vec, size_t frag_size);
+bool ip_handshake_client(int sd, handshake *, size_t size);
+bool ip_handshake_server(int sd, handshake *, size_t size);
+bool ip_handle_arg(ip_prefs *p, char opt, char *arg);
 
-    return p;
-}
-
-void
-randomize_buffer(char *buf, long long size)
-{
-    int i;
-
-    for (i = 0; i < size; i++) {
-	buf[i] = rand();
-    }
-}
+#endif /* UTIL_IP_H */

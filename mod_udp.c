@@ -23,33 +23,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 // POSIX
 #include <netdb.h>
-#include <netinet/tcp.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 // Own
 #include "eins.h"
-#include "ip.h"
-#include "udp.h"
+#include "util_ip.h"
+#include "mod_udp.h"
 #include "util.h"
+
+const net_mod mod_udp = { "UDP",
+			  "udp",
+			  IP_OPTS"F:",
+			  IP_USAGE
+			  "\n\t-F size: Send packets fragmented to `size'",
+			  udp_handle_arg,
+			  udp_init,
+			  udp_measure,
+			  udp_serve,
+			  udp_cleanup };
+
+static struct udp_prefs {
+    ip_prefs ip;
+
+    size_t frag_size;
+} Prefs = { { false, IP_DEF_PORT, 0 }, 0 };
+
+typedef struct {
+    handshake h;
+    ip_handshake ip;
+    
+    size_t frag_size;
+} udp_handshake;
 
 
 // Source-scope-vars for the client
 static char *Payload;
 static int Sock;
-static struct e_handshake Handshake;
-static unsigned int hdr_Size;
+static udp_handshake Handshake;
 static char *hdr_Buffer;
 static struct iovec hdr_Vec[2];
+
+bool
+udp_handle_arg(char opt, char *arg)
+{
+    switch (opt) {
+    case 'F':
+	Prefs.frag_size = atoi(arg);
+	return true;
+	
+    default:       
+	return ip_handle_arg((ip_prefs *) &Prefs, opt, arg);
+    }
+}
+
 
 double
 udp_measure()
 {
-    return ip_measure(Sock, Payload, Handshake.size, Handshake.tries, hdr_Size, hdr_Vec, Handshake.frag_size);
+    return ip_measure(Sock, Payload, Handshake.h.size, Handshake.h.tries, Prefs.ip.hdr_size, hdr_Vec, Handshake.frag_size);
 }
 
 void
@@ -59,45 +97,38 @@ udp_cleanup()
     free(hdr_Buffer);
 }
 
-struct ec_mod *
-udp_init(struct e_args *ea)
+bool
+udp_init(mod_args *ma)
 {
-    struct ec_mod *em = safe_alloc(sizeof(struct ec_mod));
-
-    // Setup hooks
-    em->measure = udp_measure;
-    em->cleanup = udp_cleanup;
-    
     // Set prefs
-    Payload = ea->payload;
-    Handshake.size = ea->size;
-    Handshake.tries = ea->tries;
-    Handshake.frag_size = ea->udp_frag_size;
-    hdr_Size = ea->ip_hdr_size;
+    Payload = ma->payload;
+    Handshake.h.size = ma->size;
+    Handshake.h.tries = ma->tries;
+    Handshake.frag_size = Prefs.frag_size ? Prefs.frag_size : ma->size;
 
     // If needed, set up buffer for the header + vector.
-    if (hdr_Size) {
-	hdr_Buffer = safe_alloc(hdr_Size);
+    if (Prefs.ip.hdr_size) {
+	hdr_Buffer = safe_alloc(Prefs.ip.hdr_size);
 
-	randomize_buffer(hdr_Buffer, hdr_Size);
+	randomize_buffer(hdr_Buffer, Prefs.ip.hdr_size);
 
 	hdr_Vec[0].iov_base = hdr_Buffer;
-	hdr_Vec[0].iov_len = hdr_Size;
+	hdr_Vec[0].iov_len = Prefs.ip.hdr_size;
 	hdr_Vec[1].iov_base = Payload;
-	hdr_Vec[1].iov_len = Handshake.size;
+	hdr_Vec[1].iov_len = Handshake.h.size;
     }
 
     // Resolve, connect
     struct addrinfo hints;
 
     memset(&hints, 0, sizeof(hints));
-    if (ea->ip_v6) hints.ai_family = AF_INET6; // enforce IPv6
+    if (Prefs.ip.v6) hints.ai_family = AF_INET6; // enforce IPv6
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
 
-    Sock = ip_connect(ea->target, ea->ip_port, &hints);
+    Sock = ip_connect(ma->target, Prefs.ip.port, &hints);
     if (!Sock) {
-	puts("Failed to connect to target.");
+	L("Failed to connect to target.");
 	return 0;
     }
 
@@ -105,28 +136,29 @@ udp_init(struct e_args *ea)
     int socket_buff_len = IP_DEF_SOCKET_BUFF;
     setsockopt(Sock, SOL_SOCKET, SO_SNDBUF, &socket_buff_len, sizeof(size_t));
 
-    return ip_handshake_client(Sock, &Handshake) ? em : 0;
+    return ip_handshake_client(Sock, (handshake *) &Handshake, sizeof(Handshake));
 }
 
-int
-udp_serve(struct e_args *ea)
+bool
+udp_serve(mod_args *ma)
 {
     struct sockaddr_in servaddr;
 
     memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = ea->ip_v6? AF_INET6 : AF_INET;
+    servaddr.sin_family = Prefs.ip.v6? AF_INET6 : AF_INET;
+#warning "UDP-ipv6 broken for now."
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(atoi(ea->ip_port));
+    servaddr.sin_port = htons(atoi(Prefs.ip.port));
   
     int sd = socket(servaddr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
+    if (sd == -1) XLE("server, socket");
 
     int socket_buff_len = IP_DEF_SOCKET_BUFF;
     int one = 1;
     setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &socket_buff_len, sizeof(size_t));
     setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
     if (bind(sd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1) {
-	perror("server, bind");
-	exit(1);
+	XLE("server, bind");
     }
 	
     while (1) {		
@@ -138,56 +170,56 @@ udp_serve(struct e_args *ea)
 	sock_size = sizeof(struct sockaddr);
 
 	// Handshake
-	struct e_handshake eh;
-	if (recvfrom(sd, &eh, sizeof(struct e_handshake), 0, &from, &sock_size) == -1) {
-	    perror("server, recvfrom");
+	udp_handshake eh;
+	if (recvfrom(sd, &eh, sizeof(handshake), 0, &from, &sock_size) == -1) {
+	    LE("server, recvfrom");
 	    return 0;
 	}
 
 	int response;
-	if (eh.size > 0 && eh.tries > 0 && eh.frag_size > 0) {
-	    data = safe_alloc(eh.size);
+	if (eh.h.size > 0 && eh.h.tries > 0 && eh.frag_size > 0) {
+	    data = safe_alloc(eh.h.size);
 
 	    response = 1;
 	    if (sendto(sd, &response, sizeof(response), 0, &from, sizeof(struct sockaddr)) == -1) {
-		perror("server, sendto");
-		return 0;
+		LE("server, sendto");
+		return false;
 	    }
 	    
 	} else {
 	    response = 0;
 	    if (sendto(sd, &response, sizeof(response), 0, &from, sizeof(struct sockaddr)) == -1) {
-		perror("server, sendto");
-		return 0;
+		LE("server, sendto");
+		return false;
 	    }
 
-	    puts("server, handshake failed!");
+	    L("server, handshake failed!");
 
-	    return 0;
+	    return false;
 	}
 	
 	// Measure-loop
-	for (int i = 0; i < eh.tries; i++) {
+	for (int i = 0; i < eh.h.tries; i++) {
 	    size_t bytes;
 	    ssize_t rc;
 
-	    for (bytes = 0; bytes < eh.size; bytes += rc) {
+	    for (bytes = 0; bytes < eh.h.size; bytes += rc) {
 		sock_size = sizeof(struct sockaddr);
-		rc = recvfrom(sd, data + bytes, eh.size - bytes,
+		rc = recvfrom(sd, data + bytes, eh.h.size - bytes,
 			      0, &from, &sock_size);
 		if (rc == -1) {
-		    perror("server, recvfrom");
-		    exit(1);
+		    LE("server, recvfrom");
+		    return false;
 		}
 	    }
 
-	    for (bytes = 0; bytes < eh.size; bytes += rc) {
+	    for (bytes = 0; bytes < eh.h.size; bytes += rc) {
 		rc = sendto(sd, data + bytes, 
-			   (bytes + eh.frag_size) > eh.size ? eh.size - bytes : eh.frag_size, 
+			   (bytes + eh.frag_size) > eh.h.size ? eh.h.size - bytes : eh.frag_size, 
 			    0, &from, sizeof(struct sockaddr));
 		if (rc == -1) {
-		    perror("server, sendto");
-		    exit(1);
+		    LE("server, sendto");
+		    return false;
 		}
 	    }
 	}

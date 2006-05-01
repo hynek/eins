@@ -23,11 +23,13 @@
 
 #include <sys/types.h>
 
+#ifndef __likely
 #define __likely(foo) __builtin_expect((foo),1)
 #define __unlikely(foo) __builtin_expect((foo),0)
+#endif
 
 void *safe_alloc(size_t);
-char *safe_strdup(char *);
+char *safe_strdup(const char *);
 void randomize_buffer(char *, long long);
 
 #endif /* UTIL_H */

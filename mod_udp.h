@@ -18,10 +18,18 @@
  * 02110-1301, USA.
  */
 
-#ifndef EINS_H
-#define EINS_H
+#ifndef MOD_UDP_H
+#define MOD_UDP_H
 
 #include "mods.h"
-#include "log.h"
 
-#endif // EINS_H
+bool udp_handle_arg(char opt, char *arg);
+bool udp_init(mod_args *ma);
+double udp_measure();
+void udp_cleanup();
+bool udp_serve(mod_args *ma);
+
+extern const net_mod mod_udp;
+
+
+#endif // MOD_UDP_H

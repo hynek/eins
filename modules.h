@@ -1,5 +1,5 @@
 /* 
- * eins - A tool for measuring network-bandwidths and -latencies.
+ * eins - A tool for benchmarking networks.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
  * This program is free software; you can redistribute it and/or
@@ -18,17 +18,22 @@
  * 02110-1301, USA.
  */
 
-#ifndef IP_H
-#define IP_H
+#ifndef MODULES_H
+#define MODULES_H
 
-#include <netdb.h>
+#include "mods.h"
 
-#define IP_DEF_PORT "8910"
-#define IP_DEF_SOCKET_BUFF 524288
+#include "mod_tcp.h"
+#include "mod_udp.h"
+#ifdef WITH_BMI
+#include "mod_bmi.h"
+#endif // WITH_BMI
 
-int ip_connect(char *host, char *port, struct addrinfo *hints);
-double ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iovec *hdr_vec, ssize_t frag_size);
-int ip_handshake_client(int sd, struct e_handshake *);
-int ip_handshake_server(int sd, struct e_handshake *);
+const net_mod *Modules[] = { &mod_tcp,
+			     &mod_udp,
+#ifdef WITH_BMI
+			     &mod_bmi,
+#endif // WITH_BMI
+			     NULL };
 
-#endif /* IP_H */
+#endif // MODULES_H

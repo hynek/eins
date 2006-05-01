@@ -1,5 +1,5 @@
 /* 
- * eins - A tool for measuring network-bandwidths and -latencies.
+ * eins - A tool for benchmarking networks.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
  * This program is free software; you can redistribute it and/or
@@ -17,13 +17,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  */
-
-#ifndef TCP_H
-#define TCP_H
+ 
+#ifndef MOD_BMI_H
+#define MOD_BMI_H
 
 #include "eins.h"
 
-struct ec_mod * tcp_init(struct e_args *ea);
-int tcp_serve(struct e_args *ea);
+#include "mods.h"
 
-#endif // TCP_H
+bool bmi_handle_arg(char opt, char *arg);
+bool bmi_init(mod_args *ma);
+double bmi_measure();
+void bmi_cleanup();
+bool bmi_serve(mod_args *ma);
+
+extern const net_mod mod_bmi;
+
+#endif // MOD_BMI_H
