@@ -117,7 +117,7 @@ udp_init(mod_args *ma)
 
     Sock = ip_connect(ma->target, Prefs.ip.port, &hints);
     if (!Sock) {
-	L("Failed to connect to target.");
+	L("Client: Failed to connect to target.");
 	return 0;
     }
 
@@ -131,73 +131,90 @@ udp_init(mod_args *ma)
 bool
 udp_serve(mod_args *ma)
 {
-    struct sockaddr_in servaddr;
+    struct sockaddr *servaddr;
 
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = Prefs.ip.v6? AF_INET6 : AF_INET;
-#warning "UDP-ipv6 broken for now."
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(atoi(Prefs.ip.port));
+    int sd;
+    socklen_t sock_size, tmp_sock_size;
+
+    if (Prefs.ip.v6) {
+	struct sockaddr_in6 *sin = safe_alloc(sizeof(*sin));
+
+	memset(sin, 0, sizeof(*sin));
+	sin->sin6_family = AF_INET6;
+	sin->sin6_addr = in6addr_any;
+	sin->sin6_port = htons(atoi(Prefs.ip.port));
+
+	servaddr = (struct sockaddr *) sin;
+	sock_size = sizeof(struct sockaddr_in6);
+    } else {
+	struct sockaddr_in *sin = safe_alloc(sizeof(*sin));
+
+	memset(sin, 0, sizeof(*sin));
+	sin->sin_family = AF_INET;
+	sin->sin_addr.s_addr = htonl(INADDR_ANY);
+	sin->sin_port = htons(atoi(Prefs.ip.port));
   
-    int sd = socket(servaddr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
-    if (sd == -1) XLE("server, socket");
+	servaddr = (struct sockaddr *) sin;
+	sock_size = sizeof(struct sockaddr_in);
+    }
+    sd = socket(servaddr->sa_family, SOCK_DGRAM, IPPROTO_UDP);
+    if (sd == -1) XLE("Server: socket");
 
     int socket_buff_len = IP_DEF_SOCKET_BUFF;
     int one = 1;
     setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &socket_buff_len, sizeof(size_t));
     setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-    if (bind(sd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1) {
-	XLE("server, bind");
+    if (bind(sd, servaddr, sock_size) == -1) {
+	XLE("Server: bind");
     }
 	
+    struct sockaddr *from = safe_alloc(sock_size);
     while (1) {		
 	char *data;
-	struct sockaddr from;
-	socklen_t sock_size;
 
-	memset(&from, 0, sizeof(from));
-	sock_size = sizeof(struct sockaddr);
+	memset(from, 0, sock_size);
 
 	// Handshake
 	udp_handshake uh;
-	if (recvfrom(sd, &uh, sizeof(handshake), 0, &from, &sock_size) == -1) {
-	    LE("server, recvfrom");
+	tmp_sock_size = sock_size;
+	if (recvfrom(sd, &uh, sizeof(uh), 0, from, &tmp_sock_size) == -1) {
+	    LE("Server: recvfrom");
 	    return 0;
 	}
 
 	int response;
-	if (uh.h.size > 0 && uh.h.tries > 0 && uh.frag_size > 0) {
+	if (uh.h.size > 0 && uh.h.tries > 0 && uh.frag_size > 0 && uh.frag_size <= uh.h.size) {
 	    data = safe_alloc(uh.h.size);
 
 	    response = 1;
-	    if (sendto(sd, &response, sizeof(response), 0, &from, sizeof(struct sockaddr)) == -1) {
-		LE("server, sendto");
+	    if (sendto(sd, &response, sizeof(response), 0, from, sock_size) == -1) {
+		LE("Server: sendto");
 		return false;
 	    }
 	    
 	} else {
 	    response = 0;
-	    if (sendto(sd, &response, sizeof(response), 0, &from, sizeof(struct sockaddr)) == -1) {
-		LE("server, sendto");
+	    if (sendto(sd, &response, sizeof(response), 0, from, sock_size) == -1) {
+		LE("Server: sendto");
 		return false;
 	    }
 
-	    L("server, handshake failed!");
+	    L("Server: handshake failed!");
 
-	    return false;
+	    continue;
 	}
 	
 	// Measure-loop
-	for (int i = 0; i < uh.h.tries; i++) {
+	for (size_t i = 0; i < uh.h.tries; i++) {
 	    size_t bytes;
 	    ssize_t rc;
 
 	    for (bytes = 0; bytes < uh.h.size; bytes += rc) {
-		sock_size = sizeof(struct sockaddr);
+		tmp_sock_size = sock_size;
 		rc = recvfrom(sd, data + bytes, uh.h.size - bytes,
-			      0, &from, &sock_size);
+			      0, from, &tmp_sock_size);
 		if (rc == -1) {
-		    LE("server, recvfrom");
+		    LE("Server: recvfrom");
 		    return false;
 		}
 	    }
@@ -205,9 +222,9 @@ udp_serve(mod_args *ma)
 	    for (bytes = 0; bytes < uh.h.size; bytes += rc) {
 		rc = sendto(sd, data + bytes, 
 			   (bytes + uh.frag_size) > uh.h.size ? uh.h.size - bytes : uh.frag_size, 
-			    0, &from, sizeof(struct sockaddr));
+			    0, from, sock_size);
 		if (rc == -1) {
-		    LE("server, sendto");
+		    LE("Server: sendto");
 		    return false;
 		}
 	    }
