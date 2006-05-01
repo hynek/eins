@@ -32,6 +32,7 @@ OBJS :=  eins.o measure.o util.o log.o $(MOD_OBJS)
 
 eins: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o eins
+	strip eins
 
 eins.o: eins.c eins.h measure.h util.h modules.h
 
