@@ -80,7 +80,7 @@ ip_connect(char *host, char *port, struct addrinfo *hints)
     }
 
     if (tmp == NULL) {
-	LE("client, connect"); 
+	LE("Client: connect"); 
 	return 0;
     }
 
@@ -99,12 +99,12 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 	gamma_time(ta);
 
 	if (__unlikely(writev(sd, hdr_vec, 2) == -1)) {
-	    LE("client, writev"); 
+	    LE("Client: writev"); 
 	    exit(1);
 	}
 	
 	if (__unlikely((bytes = readv(sd, hdr_vec, 2)) == -1)) {
-	    LE("client, readv"); 
+	    LE("Client: readv"); 
 	    exit(1);
 	}
 
@@ -120,14 +120,14 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 		      (bytes + frag_size) > size ? size - bytes : frag_size,
 		      0);
 	    if (rc == -1) {
-		XLE("measure, send"); 
+		XLE("Client: send"); 
 	    }
 	}
 
 	for (bytes = 0; bytes < size; bytes += rc) {
 	    rc = recv(sd, payload + bytes, size - bytes, 0);
 	    if(rc == -1) {
-		XLE("measure, recv"); 
+		XLE("Client: recv"); 
 	    }
 	}
 
@@ -138,15 +138,15 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 }
 
 bool
-ip_handshake_client(int sd, handshake *eh, size_t size)
+ip_handshake_client(int sd, handshake *h, size_t size)
 {
     int response;
 
-    if (send(sd, eh, size, 0) == -1) {
-	XLE("handshake, send"); 
+    if (send(sd, h, size, 0) == -1) {
+	XLE("Client: send"); 
     }
     if (recv(sd, &response, sizeof(response), 0) == -1) {
-	XLE("handshake, recv"); 
+	XLE("Client: recv"); 
     }
 
     return response;
@@ -158,7 +158,7 @@ ip_handshake_server(int sd, handshake *eh, size_t size)
     int response;
 
     if (recv(sd, eh, size, 0) == -1) {
-	LE("server, recv");
+	LE("Server: recv");
 	return 0;
     }
 
@@ -169,7 +169,7 @@ ip_handshake_server(int sd, handshake *eh, size_t size)
     }
 
     if(send(sd, &response, sizeof(response), 0) == -1) {
-	LE("server, send");
+	LE("Server: send");
 	return 0;
     }
 
