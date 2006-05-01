@@ -23,12 +23,6 @@
 
 #include "mods.h"
 
-bool tcp_handle_arg(char opt, char *arg);
-bool tcp_init(mod_args *ma);
-double tcp_measure();
-void tcp_cleanup();
-bool tcp_serve(mod_args *ma);
-
 extern const net_mod mod_tcp;
 
 #endif // MOD_TCP_H

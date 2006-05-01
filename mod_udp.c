@@ -38,17 +38,6 @@
 #include "mod_udp.h"
 #include "util.h"
 
-const net_mod mod_udp = { "UDP",
-			  "udp",
-			  IP_OPTS"F:",
-			  IP_USAGE
-			  "\n\t-F size: Send packets fragmented to `size'",
-			  udp_handle_arg,
-			  udp_init,
-			  udp_measure,
-			  udp_serve,
-			  udp_cleanup };
-
 static struct udp_prefs {
     ip_prefs ip;
 
@@ -170,15 +159,15 @@ udp_serve(mod_args *ma)
 	sock_size = sizeof(struct sockaddr);
 
 	// Handshake
-	udp_handshake eh;
-	if (recvfrom(sd, &eh, sizeof(handshake), 0, &from, &sock_size) == -1) {
+	udp_handshake uh;
+	if (recvfrom(sd, &uh, sizeof(handshake), 0, &from, &sock_size) == -1) {
 	    LE("server, recvfrom");
 	    return 0;
 	}
 
 	int response;
-	if (eh.h.size > 0 && eh.h.tries > 0 && eh.frag_size > 0) {
-	    data = safe_alloc(eh.h.size);
+	if (uh.h.size > 0 && uh.h.tries > 0 && uh.frag_size > 0) {
+	    data = safe_alloc(uh.h.size);
 
 	    response = 1;
 	    if (sendto(sd, &response, sizeof(response), 0, &from, sizeof(struct sockaddr)) == -1) {
@@ -199,13 +188,13 @@ udp_serve(mod_args *ma)
 	}
 	
 	// Measure-loop
-	for (int i = 0; i < eh.h.tries; i++) {
+	for (int i = 0; i < uh.h.tries; i++) {
 	    size_t bytes;
 	    ssize_t rc;
 
-	    for (bytes = 0; bytes < eh.h.size; bytes += rc) {
+	    for (bytes = 0; bytes < uh.h.size; bytes += rc) {
 		sock_size = sizeof(struct sockaddr);
-		rc = recvfrom(sd, data + bytes, eh.h.size - bytes,
+		rc = recvfrom(sd, data + bytes, uh.h.size - bytes,
 			      0, &from, &sock_size);
 		if (rc == -1) {
 		    LE("server, recvfrom");
@@ -213,9 +202,9 @@ udp_serve(mod_args *ma)
 		}
 	    }
 
-	    for (bytes = 0; bytes < eh.h.size; bytes += rc) {
+	    for (bytes = 0; bytes < uh.h.size; bytes += rc) {
 		rc = sendto(sd, data + bytes, 
-			   (bytes + eh.frag_size) > eh.h.size ? eh.h.size - bytes : eh.frag_size, 
+			   (bytes + uh.frag_size) > uh.h.size ? uh.h.size - bytes : uh.frag_size, 
 			    0, &from, sizeof(struct sockaddr));
 		if (rc == -1) {
 		    LE("server, sendto");
@@ -229,3 +218,14 @@ udp_serve(mod_args *ma)
 
     return 1;
 }
+
+const net_mod mod_udp = { "UDP",
+			  "udp",
+			  IP_OPTS"F:",
+			  IP_USAGE
+			  "\n\t-F size: Send packets fragmented to `size'",
+			  udp_handle_arg,
+			  udp_init,
+			  udp_measure,
+			  udp_serve,
+			  udp_cleanup };

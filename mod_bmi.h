@@ -21,15 +21,7 @@
 #ifndef MOD_BMI_H
 #define MOD_BMI_H
 
-#include "eins.h"
-
 #include "mods.h"
-
-bool bmi_handle_arg(char opt, char *arg);
-bool bmi_init(mod_args *ma);
-double bmi_measure();
-void bmi_cleanup();
-bool bmi_serve(mod_args *ma);
 
 extern const net_mod mod_bmi;
 

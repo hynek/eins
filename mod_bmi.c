@@ -32,16 +32,7 @@
 #include "mod_bmi.h"
 #include "util.h"
 #include "measure.h"
-
-const net_mod mod_bmi = { "BMI",
-			  "bmi",
-			  "",
-			  "\tNo specific options.",
-			  bmi_handle_arg,
-			  bmi_init,
-			  bmi_measure,
-			  bmi_serve,
-			  bmi_cleanup };
+#include "log.h"
 
 // Source scope variables for the client
 static char *buf_Snd;
@@ -296,3 +287,13 @@ bmi_serve(mod_args *ma)
 
     return true;
 }
+
+const net_mod mod_bmi = { "BMI",
+			  "bmi",
+			  "",
+			  "\tNo specific options.",
+			  bmi_handle_arg,
+			  bmi_init,
+			  bmi_measure,
+			  bmi_serve,
+			  bmi_cleanup };

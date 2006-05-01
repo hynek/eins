@@ -39,16 +39,6 @@
 #include "mod_tcp.h"
 #include "util.h"
 
-const net_mod mod_tcp = { "TCP",
-			  "tcp",
-			  IP_OPTS,
-			  IP_USAGE,
-			  tcp_handle_arg,
-			  tcp_init,
-			  tcp_measure,
-			  tcp_serve,
-			  tcp_cleanup };
-
 static struct tcp_prefs {
     ip_prefs ip;
 } Prefs = { { false, IP_DEF_PORT, 0 } };
@@ -174,26 +164,26 @@ tcp_serve(mod_args *ma)
 	    return false;
 	}
 	
-	tcp_handshake eh;
-	if (!ip_handshake_server(asd, (handshake *) &eh, sizeof(eh))) {
+	tcp_handshake th;
+	if (!ip_handshake_server(asd, (handshake *) &th, sizeof(th))) {
 	    L("Handshake failed");
 	    continue;
 	}
 
-	data = safe_alloc(eh.h.size);
+	data = safe_alloc(th.h.size);
 	
 	int i;
-	for (i = 0; i < eh.h.tries; i++) {
+	for (i = 0; i < th.h.tries; i++) {
 	    int bytes = 0;
-	    while (bytes < eh.h.size) {
-		int rc = recv(asd, data, eh.h.size, 0);
+	    while (bytes < th.h.size) {
+		int rc = recv(asd, data, th.h.size, 0);
 		if (rc == -1) {
 		    LE("server, recv");
 		    return false;
 		}
 		bytes += rc;
 	    }
-	    send(asd, data, eh.h.size, 0);
+	    send(asd, data, th.h.size, 0);
 	}
 	close(asd);
 	
@@ -202,3 +192,13 @@ tcp_serve(mod_args *ma)
 
     return true;
 }
+
+const net_mod mod_tcp = { "TCP",
+			  "tcp",
+			  IP_OPTS,
+			  IP_USAGE,
+			  tcp_handle_arg,
+			  tcp_init,
+			  tcp_measure,
+			  tcp_serve,
+			  tcp_cleanup };
