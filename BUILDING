@@ -5,7 +5,7 @@ sure your compiler can handle them (gcc 3.0 or newer should be fine).
 
 Modules, which have non-standard dependencies, have to be explicitely
 activated. So far, this only applies to BMI. Build it with `make
-WITH_BMI=1` (don't forget a `make clean' if you have objects from
+WITH_BMI=1' (don't forget a `make clean' if you have objects from
 previous builds).
 
 
