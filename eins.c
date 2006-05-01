@@ -42,7 +42,8 @@ usage_and_die(void)
 {
     puts(USAGE);
 
-    puts("\nAvailable modules with options. The word in brackets is the type for the -t option.");
+    puts("\nAvailable modules with options. The word in brackets is the type for the -t option.\n"
+	 "The -t option _must_ come _before_ any network specific options.");
 
     for (int i = 0; Modules[i]; i++) {
 	printf("\n%s (%s):\n%s\n", Modules[i]->name, Modules[i]->type , Modules[i]->usage);
@@ -102,7 +103,8 @@ parse_args(int argc, char * argv[], mod_args *ma)
 
 	default:
 	    if (nm) {
-		if (!nm->handle_arg( opt, optarg)) {
+		if (!nm->handle_arg(opt, optarg)) {
+		    L("Invalid option for `%s'.", nm->name);
 		    return NULL;
 		}
 	    } else {
