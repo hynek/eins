@@ -106,7 +106,7 @@ tcp_init(mod_args *ma)
 
     Sock = ip_connect(ma->target, Prefs.ip.port, &hints);
     if (!Sock) {
-	L("Failed to connect to target.");
+	L("Client: Failed to connect to target.");
 	return 0;
     }
 
@@ -143,14 +143,14 @@ tcp_serve(mod_args *ma)
     setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
     setsockopt(sd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
     if (bind(sd, (struct sockaddr *) ai->ai_addr, ai->ai_addrlen) == -1) {
-	LE("server, bind");
+	LE("Server: bind");
 	return false;
     }
 
     freeaddrinfo(ai);
 
     if (listen(sd, 5) == -1) {
-	LE("server, listen");
+	LE("Server: listen");
 	return false;
     }
 
@@ -160,13 +160,13 @@ tcp_serve(mod_args *ma)
     char *data = NULL;
     while (1) {		
 	if ((asd = accept(sd, &partner, &partner_addr_len)) == -1) {
-	    LE("server, accept");
+	    LE("Server: accept");
 	    return false;
 	}
 	
 	tcp_handshake th;
 	if (!ip_handshake_server(asd, (handshake *) &th, sizeof(th))) {
-	    L("Handshake failed");
+	    L("Server: Handshake failed");
 	    continue;
 	}
 
@@ -178,7 +178,7 @@ tcp_serve(mod_args *ma)
 	    while (bytes < th.h.size) {
 		int rc = recv(asd, data, th.h.size, 0);
 		if (rc == -1) {
-		    LE("server, recv");
+		    LE("Server: recv");
 		    return false;
 		}
 		bytes += rc;
