@@ -9,9 +9,9 @@ typedef struct {
         unsigned long lo;
 } time_586;
 
-#define gamma_time(x) \
+#define get_time(x) \
 __asm__ __volatile__("rdtsc" : "=d" (x.hi), "=a" (x.lo))
 
 void init_timer(void);
-double gamma_time_diff( time_586, time_586);
+double time_diff( time_586, time_586);
 void mean_variance(int, double *, double *, double *, double *, double *);

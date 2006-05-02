@@ -96,7 +96,7 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
     size_t bytes;
     
     if (__unlikely(hdr_size)) { // Use writev()/readv()
-	gamma_time(ta);
+	get_time(ta);
 
 	if (__unlikely(writev(sd, hdr_vec, 2) == -1)) {
 	    LE("Client: writev"); 
@@ -108,11 +108,11 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 	    exit(1);
 	}
 
-	gamma_time(tb);
+	get_time(tb);
 #warning "Header code broken ATM."
 	assert(bytes == (size + hdr_size));
     } else {
-	gamma_time(ta);
+	get_time(ta);
 
 	ssize_t rc;
 	for (bytes = 0; bytes < size; bytes += rc) {
@@ -131,10 +131,10 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 	    }
 	}
 
-	gamma_time(tb);
+	get_time(tb);
     }
 
-    return gamma_time_diff(tb, ta);
+    return time_diff(tb, ta);
 }
 
 bool

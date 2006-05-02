@@ -57,7 +57,7 @@ bmi_measure()
     bmi_size_t actual_size;
 
     bmi_op_id_t bmi_id;
-    gamma_time(ta);
+    get_time(ta);
     int ret = BMI_post_send(&bmi_id, Server, buf_Snd,
 			    Size, BMI_PRE_ALLOC, 0, NULL, Context);
     error_code = 0;	    
@@ -87,9 +87,9 @@ bmi_measure()
 	return (-1);
     }
 
-    gamma_time(tb);
+    get_time(tb);
     
-    return gamma_time_diff(tb, ta);
+    return time_diff(tb, ta);
 }
 
 void

@@ -165,9 +165,9 @@ main(int argc, char **argv)
     alltime = safe_alloc(ma.tries * sizeof(double));
 
     // Obtain time which is spent on measuring
-    gamma_time(ta);
-    gamma_time(tb);
-    measuredelta = gamma_time_diff(tb, ta);
+    get_time(ta);
+    get_time(tb);
+    measuredelta = time_diff(tb, ta);
 
     // Set up payload
     ma.payload = safe_alloc(ma.size);

@@ -30,7 +30,7 @@ init_timer(void)
 }
 
 double
-gamma_time_diff(time_586 b, time_586 a)
+time_diff(time_586 b, time_586 a)
 {
         double db, da, res;
 
