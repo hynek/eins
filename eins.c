@@ -35,7 +35,7 @@
 
 #define DEF_TRIES 54
 
-#define USAGE "Client: eins -t type [-i numtries] host len\nServer: eins -s -t type"
+#define USAGE "Client: eins -t type [-i numtries] [-n] host len\nServer: eins -s -t type"
 
 static void
 usage_and_die(void)
@@ -52,7 +52,7 @@ usage_and_die(void)
     exit(1);
 }
 
-#define DEF_OPTS "st:i:"
+#define DEF_OPTS "st:i:n"
 static char *
 build_optstr(const net_mod *m[])
 {
@@ -101,6 +101,10 @@ parse_args(int argc, char * argv[], mod_args *ma)
 	    ma->tries = atoi(optarg);
 	    break;
 
+	case 'n':
+	    ma->no_time = true;
+	    break;
+
 	default:
 	    if (nm) {
 		if (!nm->handle_arg(opt, optarg)) {
@@ -138,7 +142,7 @@ parse_args(int argc, char * argv[], mod_args *ma)
 int
 main(int argc, char **argv)
 {
-    mod_args ma = { EINS_CLIENT, NULL, DEF_TRIES, 0, NULL };
+    mod_args ma = { EINS_CLIENT, NULL, DEF_TRIES, 0, false, NULL };
     const net_mod *nm;
     long long i;
 
@@ -164,10 +168,12 @@ main(int argc, char **argv)
 
     alltime = safe_alloc(ma.tries * sizeof(double));
 
-    // Obtain time which is spent on measuring
-    get_time(ta);
-    get_time(tb);
-    measuredelta = time_diff(tb, ta);
+    if (!ma.no_time) {
+        // Obtain time which is spent on measuring
+        get_time(ta);
+        get_time(tb);
+        measuredelta = time_diff(tb, ta);
+    }
 
     // Set up payload
     ma.payload = safe_alloc(ma.size);
@@ -182,15 +188,17 @@ main(int argc, char **argv)
 	alltime[i] = (nm->measure() - measuredelta) / 2;
     }
 
-    // Compute and print data
-    double min, max, med, var;
-    mean_variance(ma.tries, alltime, &min, &max, &med, &var);
+    if (!ma.no_time) {
+        // Compute and print data
+        double min, max, med, var;
+        mean_variance(ma.tries, alltime, &min, &max, &med, &var);
 
-    // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
-    // but we want `bytes * 1024^2 / s'
-    double bw = ((ma.size * 1000 * 1000 ) / med) / (1024*1024);
+        // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
+        // but we want `bytes * 1024^2 / s'
+        double bw = ((ma.size * 1000 * 1000 ) / med) / (1024*1024);
 
-    printf("%15d%16f%16f\n", ma.size, med, bw);
+        printf("%15d%16f%16f\n", ma.size, med, bw);
+    }
 
     nm->cleanup();
 

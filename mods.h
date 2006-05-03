@@ -34,6 +34,7 @@ typedef struct {
     char *target;
     size_t tries;
     size_t size;
+    bool no_time;
 
     // Payload
     char *payload;
