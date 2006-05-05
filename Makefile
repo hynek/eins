@@ -1,7 +1,7 @@
 all: TAGS eins
 
 ifdef STATIC
-CC = diet gcc
+CC = diet gcc -D_BSD_SOURCE
 endif
 
 LIBS = -lm
@@ -28,7 +28,7 @@ endif
 ################################################################################
 # Core
 
-OBJS :=  eins.o measure.o util.o log.o $(MOD_OBJS)
+OBJS := eins.o measure.o util.o log.o $(MOD_OBJS)
 
 eins: $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o eins
