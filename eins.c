@@ -35,12 +35,12 @@
 
 #define DEF_TRIES 54
 
-#define USAGE "Client: eins -t type [-i numtries] [-n] host len\nServer: eins -s -t type"
+#define GENERAL_USAGE "Client: eins -t type [-i numtries] [-n] host len\nServer: eins -s -t type"
 
 static void
 usage_and_die(void)
 {
-    puts(USAGE);
+    puts(GENERAL_USAGE);
 
     puts("\nAvailable modules with options. The word in brackets is the type for the -t option.\n"
 	 "The -t option _must_ come _before_ any network specific options.");
@@ -144,7 +144,6 @@ main(int argc, char **argv)
 {
     mod_args ma = { EINS_CLIENT, NULL, DEF_TRIES, 0, false, NULL };
     const net_mod *nm;
-    long long i;
 
     srand((unsigned int) time(NULL));
 
@@ -161,7 +160,7 @@ main(int argc, char **argv)
     }
 
     // Set up time-measurement
-    double *alltime, measuredelta;
+    double *alltime, measuredelta = 0.0;
     time_586 ta, tb;
 
     init_timer();
@@ -180,11 +179,10 @@ main(int argc, char **argv)
     randomize_buffer(ma.payload, ma.size);
 
     // Set up mod
-    if (!nm->init(&ma))
-	XL("Init/Handshake failed.");
+    if (!nm->init(&ma)) XL("Init/Handshake failed.");
 
     // Main measure-loop
-    for (i = 0; i < ma.tries; i++) {
+    for (size_t i = 0; i < ma.tries; i++) {
 	alltime[i] = (nm->measure() - measuredelta) / 2;
     }
 
