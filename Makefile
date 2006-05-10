@@ -35,6 +35,9 @@ eins: $(OBJS)
 ifndef DEBUG
 	strip eins
 endif
+ifdef PRELINK
+	sudo /usr/sbin/prelink eins
+endif
 
 eins.o: eins.c eins.h measure.h util.h modules.h
 
@@ -60,4 +63,4 @@ TAGS: *.c *.h
 ################################################################################
 .PHONY: clean sync
 clean:
-	rm -f eins *.o
+	rm -f TAGS eins *.o
