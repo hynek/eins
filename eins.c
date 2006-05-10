@@ -42,8 +42,8 @@ usage_and_die(void)
 {
     puts(GENERAL_USAGE);
 
-    puts("\nAvailable modules with options. The word in brackets is the type for the -t option.\n"
-	 "The -t option _must_ come _before_ any network specific options.");
+    puts("\nAvailable modules with options. The word in brackets is the type for the -t option."
+	 "\nThe -t option _must_ come _before_ any network specific options.");
 
     for (int i = 0; Modules[i]; i++) {
 	printf("\n%s (%s):\n%s\n", Modules[i]->name, Modules[i]->type , Modules[i]->usage);
