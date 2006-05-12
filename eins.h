@@ -24,4 +24,11 @@
 #include "mods.h"
 #include "log.h"
 
+typedef struct {
+    size_t until;
+    size_t step;
+    bool no_time;
+    bool quiet;
+} prefs;
+
 #endif // EINS_H
