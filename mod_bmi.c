@@ -68,7 +68,7 @@ bmi_measure()
 	} while (ret == 0 && outcount == 0);
     }
     if (ret < 0 || error_code != 0) {
-	fprintf(stderr, "Client: BMI send error.\n");
+	L("Client: BMI send error.\n");
 	return (-1);
     }
 
@@ -83,7 +83,7 @@ bmi_measure()
 	} while (ret == 0 && outcount == 0);
     }
     if (ret < 0 || error_code != 0) {
-	fprintf(stderr, "Client: BMI recv error.\n");
+	L("Client: BMI recv error.\n");
 	return (-1);
     }
 
@@ -167,7 +167,7 @@ bmi_init(mod_args *ma)
     } while (ret == 0 && outcount == 0);
 
     if (ret < 0 || error_code != 0) {
-	fprintf(stderr, "Client: BMI receive error while handshake.\n");
+	L( "Client: BMI receive error while handshake.\n");
 	return 0;
     }
 
