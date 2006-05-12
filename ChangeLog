@@ -1,14 +1,24 @@
 2006-05-12  Hynek Schlawack  <hs+cl@ox.cx>
 
-	* eins.c (main): Enhaced progress indicator (added absolute value in bytes)
+	* mod_bmi.c (bmi_init): BMI_initialize() get run only the first
+	time now.
+	(bmi_cleanup): BMI_finalize() doesn't get called at all
+	anymore. The reason for these changes is that BMI starts to behave
+	strange when BMI_initialize()/BMI_finalize() get run too
+	often (~1021).
+
+	* eins.c (main): Enhaced progress indicator (added absolute value
+	in bytes)
 
 	* mod_bmi.c (bmi_init): Added code to handle immediate completion.
 
-	* eins.c (main): Added support for iterating through several values.
+	* eins.c (main): Added support for iterating through several
+	values.
 	(main): Added simple progress indicator.
 	(parse_args): Adjusted to new arguments.
 
-	* eins.h (prefs): Added general prefs struct. Removed `no_time' from mod_args.
+	* eins.h (prefs): Added general prefs struct. Removed `no_time'
+	from mod_args.
 
 	* eins.c (GENERAL_USAGE): Clarified and enhaced usage.
 
