@@ -36,7 +36,7 @@ ifndef DEBUG
 	strip eins
 endif
 ifdef PRELINK
-	sudo /usr/sbin/prelink eins
+	sudo /usr/sbin/prelink ./eins
 endif
 
 eins.o: eins.c eins.h measure.h util.h modules.h
