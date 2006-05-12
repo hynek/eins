@@ -142,20 +142,23 @@ bmi_init(mod_args *ma)
 
     // Send size and num of tries
     handshake eh = { ma->tries, ma->size };
-    if (BMI_post_sendunexpected(&bmi_id, Server, &eh, sizeof(eh), BMI_EXT_ALLOC, 0, NULL, Context) != 0) {
+    ret = BMI_post_sendunexpected(&bmi_id, Server, &eh, sizeof(eh), BMI_EXT_ALLOC, 0, NULL, Context);
+    if (ret < 0) {
 	L("Client: BMI_post_sendunexpected() failed while handshake.");
 	return false;
     }
 
     int error_code, outcount;
     bmi_size_t actual_size;
-    do {
-        ret = BMI_test(bmi_id, &outcount, &error_code,
-                       &actual_size, NULL, 100, Context);
-    } while (ret == 0 && outcount == 0);
-    if (ret < 0) {
-	L("Client: BMI_test() failed while handshake");
-	return false;
+    if (ret == 0) {
+	do {
+	    ret = BMI_test(bmi_id, &outcount, &error_code,
+			   &actual_size, NULL, 100, Context);
+	} while (ret == 0 && outcount == 0);
+	if (ret < 0) {
+	    L("Client: BMI_test() failed while handshake");
+	    return false;
+	}
     }
 
     // Wait for ok
@@ -190,7 +193,7 @@ bmi_serve(mod_args *ma)
 	L("Server: BMI_initialize() failed.");
 	return false;
     }
-    
+
     if (BMI_open_context(&context) != 0) {
 	L("Server: BMI_open_context() failed.");
 	return false;

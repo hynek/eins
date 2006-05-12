@@ -1,5 +1,7 @@
 2006-05-12  Hynek Schlawack  <hs+cl@ox.cx>
 
+	* mod_bmi.c (bmi_init): Added code to handle immediate completion.
+
 	* eins.c (main): Added support for iterating through several values.
 	(main): Added simple progress indicator.
 	(parse_args): Adjusted to new arguments.
