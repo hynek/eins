@@ -96,7 +96,8 @@ void
 bmi_cleanup()
 {
     BMI_close_context(Context);
-    BMI_finalize();
+//    BMI_finalize();
+#warning "BMI_finalize() not called."
 }
 
 bool
@@ -117,15 +118,20 @@ bmi_init(mod_args *ma)
 	return false;
     }
 
-    if (BMI_initialize(method, NULL, 0) != 0) {
-	L("Client: BMI_initialize() failed.");
-	return false;
+    static bool first = true;
+    if (first) {
+	if (BMI_initialize(method, NULL, 0) != 0) {
+	    L("Client: BMI_initialize() failed.");
+	    return false;
+	}
+	first = false;
     }
 
     if (BMI_open_context(&Context) != 0) {
 	L("Client: BMI_open_context() failed.");
 	return false;
     }
+
 
     if (BMI_addr_lookup(&Server, ma->target) != 0) {
 	L("Client: BMI_addr_lookup() failed.");

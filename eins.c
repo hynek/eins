@@ -238,7 +238,7 @@ main(int argc, char **argv)
 	unsigned int progress_new = ((double) ma.size / p.until) * 100;
 	if (!p.quiet && progress_new > progress && !(progress_new == 100 && progress == 0 )) {
 	    progress = progress_new;
-	    L("%d%% done.", progress);
+	    L("%u%% (%u Bytes) done.", progress, ma.size);
 	}
     }
 
