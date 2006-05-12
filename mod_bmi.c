@@ -118,6 +118,8 @@ bmi_init(mod_args *ma)
 	return false;
     }
 
+    /* We call BMI_initialize only once as frequent calling ended up
+     * with a SIG_PIPE after 1020 calls. */
     static bool first = true;
     if (first) {
 	if (BMI_initialize(method, NULL, 0) != 0) {
