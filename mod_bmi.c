@@ -98,6 +98,10 @@ bmi_cleanup()
     BMI_close_context(Context);
 //    BMI_finalize();
 #warning "BMI_finalize() not called."
+    if (buf_Snd)
+	BMI_memfree(Server, buf_Snd, Size, BMI_SEND);
+    if (buf_Rcv)
+	BMI_memfree(Server, buf_Rcv, Size, BMI_RECV);    
 }
 
 bool
@@ -142,7 +146,7 @@ bmi_init(mod_args *ma)
 
     buf_Snd = BMI_memalloc(Server, ma->size, BMI_SEND);
     memcpy(buf_Snd, ma->payload, ma->size);
-    buf_Rcv = BMI_memalloc(Server, ma->size, BMI_RECV);    
+    buf_Rcv = BMI_memalloc(Server, ma->size, BMI_RECV);
 
     
     // Handshake

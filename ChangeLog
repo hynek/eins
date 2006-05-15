@@ -1,3 +1,7 @@
+2006-05-15  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* mod_bmi.c (bmi_cleanup): Fixed memleak.
+
 2006-05-12  Hynek Schlawack  <hs+cl@ox.cx>
 
 	* mod_bmi.c (bmi_init): BMI_initialize() get run only the first
