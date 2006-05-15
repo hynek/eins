@@ -1,5 +1,7 @@
 2006-05-15  Hynek Schlawack  <hs+cl@ox.cx>
 
+	* eins.c (parse_args): Added check for valid `-i'.
+
 	* mod_bmi.c (bmi_cleanup): Fixed memleak.
 
 2006-05-12  Hynek Schlawack  <hs+cl@ox.cx>

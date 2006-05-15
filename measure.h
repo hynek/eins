@@ -1,6 +1,7 @@
 //#define NPROVE 54
 #define WARM_UP 2
 #define DISCARD_WORST 2
+#define MIN_VALS (WARM_UP + DISCARD_WORST)
 #define NINTERVALS 5000
 #define STEP 1.0e-2
 

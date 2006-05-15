@@ -111,7 +111,9 @@ parse_args(int argc, char * argv[], mod_args *ma, prefs *p)
 	    break;
 
 	case 'i':
-	    ma->tries = atoi(optarg);
+	    ma->tries = abs(atoi(optarg));
+	    if (ma->tries <= MIN_VALS)
+		XL("Value of `-i' has to be bigger than %u.", MIN_VALS);
 	    break;
 
 	case 'n':
