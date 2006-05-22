@@ -227,7 +227,9 @@ main(int argc, char **argv)
 
 	    // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
 	    // but we want `bytes * 1024^2 / s'
-	    double bw = ((ma.size * 1000 * 1000 ) / med) / (1024*1024);
+	    // 15625 / 16384 = (1000*1000) / (1024*1024)
+	    double bw = ma.size / med;
+	    bw *= (double) 15625 / 16384;
 
 	    printf("%15d%16f%16f\n", ma.size, med, bw);
 	}
