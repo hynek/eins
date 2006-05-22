@@ -93,7 +93,7 @@ udp_init(mod_args *ma)
     Payload = ma->payload;
     Handshake.h.size = ma->size;
     Handshake.h.tries = ma->tries;
-    Handshake.frag_size = Prefs.frag_size ? Prefs.frag_size : ma->size;
+    Handshake.frag_size = Prefs.frag_size && Prefs.frag_size < ma->size ? Prefs.frag_size : ma->size;
 
     // If needed, set up buffer for the header + vector.
     if (Prefs.ip.hdr_size) {
