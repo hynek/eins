@@ -295,6 +295,7 @@ bmi_serve(mod_args *ma)
 	// Clean up
 	BMI_memfree(client, buf_snd, h->size, BMI_SEND);
 	BMI_memfree(client, buf_rcv, h->size, BMI_RECV);
+	free(h);
     }
 
     BMI_close_context(context);
