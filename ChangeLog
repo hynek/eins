@@ -1,3 +1,9 @@
+2006-05-22  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* mod_bmi.c (bmi_serve): Fixed memleak.
+
+	* mod_udp.c (udp_init): Sanitized fragmentation.
+
 2006-05-15  Hynek Schlawack  <hs+cl@ox.cx>
 
 	* eins.c (parse_args): Added check for valid `-i'.
