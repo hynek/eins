@@ -1,3 +1,7 @@
+2006-05-25    <lschneid@cs.uni-potsdam.de>
+
+	* AUTHORS: completed author list
+
 2006-05-22  Hynek Schlawack  <hs+cl@ox.cx>
 
 	* mod_bmi.c (bmi_serve): Fixed memleak.

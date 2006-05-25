@@ -5,3 +5,6 @@ current maintainer.
 Lars Schneidenbach <lschneid@cs.uni-potsdam.de> wrote the original
 `sockping' which still dominates `eins'' operating principle. He is also
 the author of the original measure code.
+
+Giuseppe Ciaccio <ciaccio@disi.unige.it> wrote the original code taken
+for measurements, i.e. get_time, time_diff and mean_variance
