@@ -3,6 +3,7 @@
 	* util_ip.c (ip_measure): Added check whether the data received is
 	the same a the sent.
 	(ip_measure): Replaced `int's with `size_t's in the signature.
+	(ip_measure): Fixed a small introduced memleak.
 
 2006-05-25  Lars Schneidenbach  <lschneid@cs.uni-potsdam.de>
 

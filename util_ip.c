@@ -138,6 +138,8 @@ ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, st
     if (memcmp(payload, rcv_buf, size))
 	XL("PANIC! Data received doesn't match data sent!");
 
+    free(rcv_buf);
+
     return time_diff(tb, ta);
 }
 
