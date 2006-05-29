@@ -40,7 +40,7 @@ typedef struct {
 } ip_handshake;
 
 int ip_connect(char *host, char *port, struct addrinfo *hints);
-double ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iovec *hdr_vec, size_t frag_size);
+double ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, struct iovec *hdr_vec, size_t frag_size);
 bool ip_handshake_client(int sd, handshake *, size_t size);
 bool ip_handshake_server(int sd, handshake *, size_t size);
 bool ip_handle_arg(ip_prefs *p, char opt, char *arg);

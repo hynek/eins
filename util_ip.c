@@ -90,10 +90,11 @@ ip_connect(char *host, char *port, struct addrinfo *hints)
 }
 
 double
-ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iovec *hdr_vec, size_t frag_size)
+ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, struct iovec *hdr_vec, size_t frag_size)
 {
     time_586 ta, tb;
     size_t bytes;
+    char *rcv_buf = safe_alloc(size);
     
     if (__unlikely(hdr_size)) { // Use writev()/readv()
 	get_time(ta);
@@ -125,7 +126,7 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 	}
 
 	for (bytes = 0; bytes < size; bytes += rc) {
-	    rc = recv(sd, payload + bytes, size - bytes, 0);
+	    rc = recv(sd, rcv_buf + bytes, size - bytes, 0);
 	    if(rc == -1) {
 		XLE("Client: recv"); 
 	    }
@@ -133,6 +134,9 @@ ip_measure(int sd, char *payload, int size, int tries, int hdr_size, struct iove
 
 	get_time(tb);
     }
+
+    if (memcmp(payload, rcv_buf, size))
+	XL("PANIC! Data received doesn't match data sent!");
 
     return time_diff(tb, ta);
 }
