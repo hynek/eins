@@ -1,3 +1,8 @@
+2006-05-30  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* mod_bmi.c (bmi_measure): Added check whether the data received is
+	the same a the sent.
+
 2006-05-29  Hynek Schlawack  <hs+cl@ox.cx>
 
 	* util_ip.c (ip_measure): Added check whether the data received is

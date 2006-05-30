@@ -88,6 +88,9 @@ bmi_measure()
     }
 
     get_time(tb);
+
+    if (memcmp(buf_Snd, buf_Rcv, Size))
+	XL("PANIC! Data received doesn't match data sent!");
     
     return time_diff(tb, ta);
 }
