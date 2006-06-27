@@ -1,3 +1,7 @@
+2006-06-27  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* src/mod_tcp.c (tcp_serve): Better handling of long messages.
+
 2006-06-22  Hynek Schlawack  <hs+cl@ox.cx>
 
 	* Global: Changed completely build system and uses

@@ -174,16 +174,23 @@ tcp_serve(mod_args *ma)
 	
 	int i;
 	for (i = 0; i < th.h.tries; i++) {
-	    int bytes = 0;
-	    while (bytes < th.h.size) {
-		int rc = recv(asd, data, th.h.size, 0);
+	    int rc;
+	    size_t bytes;
+	    for (bytes = 0; bytes < th.h.size; bytes += rc) {
+		rc = recv(asd, data + bytes, th.h.size - bytes, 0);
 		if (rc == -1) {
 		    LE("Server: recv");
 		    return false;
-		}
-		bytes += rc;
+		}		
 	    }
-	    send(asd, data, th.h.size, 0);
+
+	    for (bytes = 0; bytes < th.h.size; bytes += rc) {
+		rc = send(asd, data + bytes, th.h.size - bytes, 0);
+		if (rc == -1) {
+		    LE("Server: recv");
+		    return false;
+		}		
+	    }
 	}
 	close(asd);
 	
