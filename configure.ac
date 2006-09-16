@@ -19,6 +19,12 @@ if test "x$ac_pvfs2_path" != "xno"; then
 fi
 AM_CONDITIONAL(WITH_BMI, test "x$ac_pvfs2_path" != "xno")
 
+AC_ARG_WITH(neon, [AC_HELP_STRING([--with-neon=DIR], [Compile also the NEON-related modules])], [ac_neon_path="$withval"], [ac_neon_path="no"])
+if test "x$ac_neon_path" != "xno"; then
+   CFLAGS="-L$ac_neon_path/src -I$ac_neon_path/src/neon -DWITH_NEON $CFLAGS"
+fi
+AM_CONDITIONAL(WITH_NEON, test "x$ac_neon_path" != "xno")
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([limits.h netdb.h netinet/in.h stdlib.h string.h sys/socket.h sys/time.h unistd.h])

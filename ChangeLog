@@ -1,3 +1,9 @@
+2006-09-17  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* src/mod_malloc.c: Added basic memory benchmark.
+
+	* src/mod_neon.c: Added support for NEON.
+
 2006-06-27  Hynek Schlawack  <hs+cl@ox.cx>
 
 	* src/mod_tcp.c (tcp_serve): Better handling of long messages.

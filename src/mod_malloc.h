@@ -1,5 +1,5 @@
 /* 
- * eins - A tool for benchmarking networks.
+ * eins - A tool for benchmarking networks. (and memory ;))
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
  * This program is free software; you can redistribute it and/or
@@ -18,30 +18,12 @@
  * 02110-1301, USA.
  */
 
-#ifndef MODULES_H
-#define MODULES_H
+#ifndef MOD_MALLOC_H
+#define MOD_MALLOC_H
 
-#include "mods.h"
+extern const net_mod mod_malloc;
 
-#include "mod_tcp.h"
-#include "mod_udp.h"
-#include "mod_malloc.h"
-#ifdef WITH_BMI
-#include "mod_bmi.h"
-#endif // WITH_BMI
-#ifdef WITH_NEON
-#include "mod_neon.h"
-#endif // WITH_NEON
+#define MALLOC_OPTS ""
+#define MALLOC_USAGE ""
 
-const net_mod *Modules[] = { &mod_tcp,
-			     &mod_udp,
-			     &mod_malloc,
-#ifdef WITH_BMI
-			     &mod_bmi,
-#endif // WITH_BMI
-#ifdef WITH_NEON
-			     &mod_neon,
-#endif // WITH_NEON
-			     NULL };
-
-#endif // MODULES_H
+#endif /* MOD_MALLOC_H */

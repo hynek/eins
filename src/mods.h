@@ -75,17 +75,4 @@ typedef struct {
     size_t size;
 } handshake;
 
-/*
-    // IP-/socket-based
-    char *ip_port;
-    ssize_t ip_hdr_size;
-    short ip_v6;
-
-    // UDP
-    ssize_t udp_frag_size;
-
-    // BMI-based
-    char *bmi_method;
-*/
-
 #endif //MODS_H
