@@ -41,11 +41,15 @@
 
 static struct tcp_prefs {
     ip_prefs ip;
-} Prefs = { { false, IP_DEF_PORT, 0 } };
+
+    size_t frag_size;
+} Prefs = { { false, IP_DEF_PORT, 0 }, 0 };
 
 typedef struct {
     handshake h;
     ip_handshake ip;    
+
+    size_t frag_size;
 } tcp_handshake;
 
 // Source scope variables for the client
@@ -58,8 +62,14 @@ static tcp_handshake Handshake;
 bool
 tcp_handle_arg(char opt, char *arg)
 {
-    // TCP has only IP specific options
-    return ip_handle_arg((ip_prefs *) &Prefs, opt, arg);
+    switch (opt) {
+    case 'F':
+	Prefs.frag_size = atoi(arg);
+	return true;
+	
+    default:       
+	return ip_handle_arg((ip_prefs *) &Prefs, opt, arg);
+    }
 }
 
 double
@@ -83,6 +93,7 @@ tcp_init(mod_args *ma)
     Payload = ma->payload;
     Handshake.h.size = ma->size;
     Handshake.h.tries = ma->tries;
+    Handshake.frag_size =  Prefs.frag_size && Prefs.frag_size < ma->size ? Prefs.frag_size : ma->size;
 
     // If needed, set up buffer for the header + vector.
     if (Prefs.ip.hdr_size) {
@@ -165,8 +176,35 @@ tcp_serve(mod_args *ma)
 	}
 	
 	tcp_handshake th;
-	if (!ip_handshake_server(asd, (handshake *) &th, sizeof(th))) {
+	/*if (!ip_handshake_server(asd, (handshake *) &th, sizeof(th))) {
 	    L("Server: Handshake failed");
+	    continue;
+        }*/
+
+	if (recv(asd, &th, sizeof(th), MSG_WAITALL) == -1) {
+	    LE("Server: recvfrom");
+	    return 0;
+	}
+
+	int response;
+	if (th.h.size > 0 && th.h.tries > 0 && th.frag_size > 0 && th.frag_size <= th.h.size) {
+	    data = safe_alloc(th.h.size);
+
+	    response = 1;
+	    if (send(asd, &response, sizeof(response), 0) == -1) {
+		LE("Server: sendto");
+		return false;
+	    }
+	    
+	} else {
+	    response = 0;
+	    if (send(asd, &response, sizeof(response), 0) == -1) {
+		LE("Server: sendto");
+		return false;
+	    }
+
+	    L("Server: handshake failed!");
+
 	    continue;
 	}
 
@@ -177,7 +215,7 @@ tcp_serve(mod_args *ma)
 	    int rc;
 	    size_t bytes;
 	    for (bytes = 0; bytes < th.h.size; bytes += rc) {
-		rc = recv(asd, data + bytes, th.h.size - bytes, 0);
+		rc = recv(asd, data + bytes, (bytes + th.frag_size) > th.h.size ? th.h.size - bytes : th.frag_size, 0);
 		if (rc == -1) {
 		    LE("Server: recv");
 		    return false;
@@ -185,12 +223,14 @@ tcp_serve(mod_args *ma)
 	    }
 
 	    for (bytes = 0; bytes < th.h.size; bytes += rc) {
-		rc = send(asd, data + bytes, th.h.size - bytes, 0);
+		rc = send(asd, data + bytes, 
+                  (bytes + th.frag_size) > th.h.size ? th.h.size - bytes : th.frag_size, 0);
 		if (rc == -1) {
-		    LE("Server: recv");
+		    LE("Server: send");
 		    return false;
-		}		
+		}
 	    }
+
 	}
 	close(asd);
 	

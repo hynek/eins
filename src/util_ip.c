@@ -126,7 +126,9 @@ ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, st
 	}
 
 	for (bytes = 0; bytes < size; bytes += rc) {
-	    rc = recv(sd, rcv_buf + bytes, size - bytes, 0);
+	    rc = recv(sd, rcv_buf + bytes, 
+                  (bytes + frag_size) > size ? size - bytes : frag_size,
+                  0);
 	    if(rc == -1) {
 		XLE("Client: recv"); 
 	    }
