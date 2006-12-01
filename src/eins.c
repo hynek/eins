@@ -57,10 +57,10 @@ usage_and_die(void)
     puts(GENERAL_USAGE);
 
     puts("\nAvailable modules with options. The word in brackets is the type for the -t option."
-	 "\nThe -t option _must_ come _before_ any network specific options.");
+         "\nThe -t option _must_ come _before_ any network specific options.");
 
     for (int i = 0; Modules[i]; i++) {
-	printf("\n%s (%s):\n%s\n", Modules[i]->name, Modules[i]->type , Modules[i]->usage);
+        printf("\n%s (%s):\n%s\n", Modules[i]->name, Modules[i]->type , Modules[i]->usage);
     }
 
     exit(1);
@@ -71,16 +71,16 @@ build_optstr(const net_mod *m[])
 {
     size_t len = strlen(DEF_OPTS);
     for (int i = 0; m[i]; i++) {
-	len += strlen(m[i]->opts);
+        len += strlen(m[i]->opts);
     }
     
     char *str = safe_alloc(len + 1);
     strcpy(str, DEF_OPTS);
 
     for (int i = 0; m[i]; i++) {
-	// Double entries seem to be okay as long they don't
+        // Double entries seem to be okay as long they don't
         // contradict.
-	strcat(str, m[i]->opts);
+        strcat(str, m[i]->opts);
     }
 
     return str;
@@ -95,73 +95,73 @@ parse_args(int argc, char * argv[], mod_args *ma, prefs *p)
 
     char opt;
     while ((opt = getopt(argc, argv, optstr)) != -1) {
-	// Mode
-	switch (opt) {
-	case 's':
-	    ma->mode = EINS_SERVER;
-	    break;
+        // Mode
+        switch (opt) {
+        case 's':
+            ma->mode = EINS_SERVER;
+            break;
 	    
-	    // Mods
-	case 't':
-	    for (int i = 0; Modules[i]; i++) {
-		if (!strncmp(Modules[i]->type, optarg, strlen(optarg))) {
-		    nm = Modules[i];
-		}
-	    }
-	    break;
+            // Mods
+        case 't':
+            for (int i = 0; Modules[i]; i++) {
+                if (!strncmp(Modules[i]->type, optarg, strlen(optarg))) {
+                    nm = Modules[i];
+                }
+            }
+            break;
 
-	case 'i':
-	    ma->tries = abs(atoi(optarg));
-	    if (ma->tries <= MIN_VALS)
-		XL("Value of `-i' has to be bigger than %u.", MIN_VALS);
-	    break;
+        case 'i':
+            ma->tries = abs(atoi(optarg));
+            if (ma->tries <= MIN_VALS)
+                XL("Value of `-i' has to be bigger than %u.", MIN_VALS);
+            break;
 
-	case 'n':
-	    p->no_time = true;
-	    break;
+        case 'n':
+            p->no_time = true;
+            break;
 
-	case 'u':
-	    p->until = atoi(optarg);
-	    break;
+        case 'u':
+            p->until = atoi(optarg);
+            break;
 
-	case 'b':
-	    p->step = atoi(optarg);
-	    break;
+        case 'b':
+            p->step = atoi(optarg);
+            break;
 
-	case 'q':
-	    p->quiet = true;
-	    break;
+        case 'q':
+            p->quiet = true;
+            break;
 
-	default:
-	    if (nm) {
-		if (!nm->handle_arg(opt, optarg)) {
-		    L("Invalid option for `%s'.", nm->name);
-		    return NULL;
-		}
-	    } else {
-		L("No network type specified.");
-		return NULL;
-	    }
-	}
+        default:
+            if (nm) {
+                if (!nm->handle_arg(opt, optarg)) {
+                    L("Invalid option for `%s'.", nm->name);
+                    return NULL;
+                }
+            } else {
+                L("No network type specified.");
+                return NULL;
+            }
+        }
     }
 
     free(optstr); // Possible memleak but neglectible
 
     if (!nm) {
-	usage_and_die();
+        usage_and_die();
     }
 
     if ((ma->mode == EINS_CLIENT) && ((argc != (optind + 2)))) {
-	usage_and_die();
+        usage_and_die();
     }
   
     if (ma->mode == EINS_CLIENT) {
-	ma->target = argv[optind];
-	ma->size = atoi(argv[optind + 1]);
+        ma->target = argv[optind];
+        ma->size = atoi(argv[optind + 1]);
     }
 
     if (!p->until)
-	p->until = ma->size;
+        p->until = ma->size;
 
     return nm;
 }
@@ -179,15 +179,15 @@ main(int argc, char **argv)
     srand((unsigned int) time(NULL));
 
     if (!log_open(NULL)) {
-	puts("Failed to open log file.");
-	exit(1);
+        puts("Failed to open log file.");
+        exit(1);
     }
 
     nm = parse_args(argc, argv, &ma, &p);
     if (!nm) exit(1);
 
     if (ma.mode == EINS_SERVER) {
-	return !nm->serve(&ma);
+        return !nm->serve(&ma);
     }
 
     // Set up time-measurement
@@ -197,53 +197,53 @@ main(int argc, char **argv)
     init_timer();
 
     if (!p.no_time) {
-	// Obtain time which is spent on measuring
-	get_time(ta);
-	get_time(tb);
-	measuredelta = time_diff(tb, ta);
+        // Obtain time which is spent on measuring
+        get_time(ta);
+        get_time(tb);
+        measuredelta = time_diff(tb, ta);
     }
 
     unsigned int progress = 0;
     for (; ma.size <= p.until; ma.size += p.step) {
 
-	alltime = safe_alloc(ma.tries * sizeof(double));
+        alltime = safe_alloc(ma.tries * sizeof(double));
 
-	// Set up payload
-	ma.payload = safe_alloc(ma.size);
-	randomize_buffer(ma.payload, ma.size);
+        // Set up payload
+        ma.payload = safe_alloc(ma.size);
+        randomize_buffer(ma.payload, ma.size);
 
-	// Set up mod
-	if (!nm->init(&ma)) XL("Init/Handshake failed.");
+        // Set up mod
+        if (!nm->init(&ma)) XL("Init/Handshake failed.");
 
-	// Main measure-loop
-	for (size_t try = 0; try < ma.tries; try++) {
-	    alltime[try] = (nm->measure() - measuredelta) / 2;
-	}
+        // Main measure-loop
+        for (size_t try = 0; try < ma.tries; try++) {
+            alltime[try] = (nm->measure() - measuredelta) / 2;
+        }
 
-	if (!p.no_time) {
-	    // Compute and print data
-	    double min, max, med, var;
-	    mean_variance(ma.tries, alltime, &min, &max, &med, &var);
+        if (!p.no_time) {
+            // Compute and print data
+            double min, max, med, var;
+            mean_variance(ma.tries, alltime, &min, &max, &med, &var);
 
-	    // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
-	    // but we want `bytes * 1024^2 / s'
-	    // 15625 / 16384 = (1000*1000) / (1024*1024)
-	    double bw = ma.size / med;
-	    bw *= (double) 15625 / 16384;
+            // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
+            // but we want `bytes * 1024^2 / s'
+            // 15625 / 16384 = (1000*1000) / (1024*1024)
+            double bw = ma.size / med;
+            bw *= (double) 15625 / 16384;
 
-	    printf("%15d%16f%16f\n", ma.size, med, bw);
-	}
+            printf("%15d%16f%16f\n", ma.size, med, bw);
+        }
 
-	nm->cleanup();
+        nm->cleanup();
 	
-	free(alltime);
-	free(ma.payload);
+        free(alltime);
+        free(ma.payload);
 
-	unsigned int progress_new = ((double) ma.size / p.until) * 100;
-	if (!p.quiet && progress_new > progress && !(progress_new == 100 && progress == 0 )) {
-	    progress = progress_new;
-	    L("%u%% (%u Bytes) done.", progress, ma.size);
-	}
+        unsigned int progress_new = ((double) ma.size / p.until) * 100;
+        if (!p.quiet && progress_new > progress && !(progress_new == 100 && progress == 0 )) {
+            progress = progress_new;
+            L("%u%% (%u Bytes) done.", progress, ma.size);
+        }
     }
 
     log_close();
