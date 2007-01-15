@@ -225,11 +225,13 @@ main(int argc, char **argv)
             double min, max, med, var;
             mean_variance(ma.tries, alltime, &min, &max, &med, &var);
 
-            // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
-            // but we want `bytes * 1024^2 / s'
-            // 15625 / 16384 = (1000*1000) / (1024*1024)
-            double bw = ma.size / med;
-            bw *= (double) 15625 / 16384;
+	    // `bytes / 1000^-2 * s = bytes * 1000^2 / s',
+	    // but we want `bytes * 1024^2 / s'
+	    // 15625 / 16384 = (1000*1000) / (1024*1024)
+            // Obsoleted by: Networks use Base10!! Lesson learned ;-)
+            // => 1000B/s = 1kB/s; 1000kB/s = 1MB/s
+	    double bw = ma.size / med;
+	    //bw *= (double) 15625 / 16384;
 
             printf("%15d%16f%16f\n", ma.size, med, bw);
         }
