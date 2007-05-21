@@ -233,7 +233,7 @@ main(int argc, char **argv)
 	    double bw = ma.size / med;
 	    //bw *= (double) 15625 / 16384;
 
-            printf("%15d%16f%16f%16f\n", ma.size, med, bw, var);
+            printf("%15d%16f%16f%16f\n", ma.size, med, bw, sqrt(var));
         }
 
         nm->cleanup();
