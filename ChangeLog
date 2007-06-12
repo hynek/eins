@@ -1,3 +1,12 @@
+2007-06-12  Lars Schneidenbach  <lschneid@cs.uni-potsdam.de>
+
+	* src/mod_tcp.c (tcp_serve): handle ip-address option
+	* src/mod_udp.c (udp_serve): handle ip-address option
+	* src/mod_accept.c (accept_serve): handle ip-address option
+
+	* src/util_ip (ip_prefs): included preferred ip-address as
+	commandline parameter
+
 2006-12-01  Lars Schneidenbach  <lschneid@cs.uni-potsdam.de>
 
 	* src/mod_accept.c: new module to measure connect times

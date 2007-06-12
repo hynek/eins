@@ -64,11 +64,11 @@ udp_handle_arg(char opt, char *arg)
 {
     switch (opt) {
     case 'F':
-	Prefs.frag_size = atoi(arg);
-	return true;
+        Prefs.frag_size = atoi(arg);
+        return true;
 	
     default:       
-	return ip_handle_arg((ip_prefs *) &Prefs, opt, arg);
+        return ip_handle_arg((ip_prefs *) &Prefs, opt, arg);
     }
 }
 
@@ -97,14 +97,14 @@ udp_init(mod_args *ma)
 
     // If needed, set up buffer for the header + vector.
     if (Prefs.ip.hdr_size) {
-	hdr_Buffer = safe_alloc(Prefs.ip.hdr_size);
+        hdr_Buffer = safe_alloc(Prefs.ip.hdr_size);
 
-	randomize_buffer(hdr_Buffer, Prefs.ip.hdr_size);
+        randomize_buffer(hdr_Buffer, Prefs.ip.hdr_size);
 
-	hdr_Vec[0].iov_base = hdr_Buffer;
-	hdr_Vec[0].iov_len = Prefs.ip.hdr_size;
-	hdr_Vec[1].iov_base = Payload;
-	hdr_Vec[1].iov_len = Handshake.h.size;
+        hdr_Vec[0].iov_base = hdr_Buffer;
+        hdr_Vec[0].iov_len = Prefs.ip.hdr_size;
+        hdr_Vec[1].iov_base = Payload;
+        hdr_Vec[1].iov_len = Handshake.h.size;
     }
 
     // Resolve, connect
@@ -117,8 +117,8 @@ udp_init(mod_args *ma)
 
     Sock = ip_connect(ma->target, Prefs.ip.port, &hints);
     if (!Sock) {
-	L("Client: Failed to connect to target.");
-	return 0;
+        L("Client: Failed to connect to target.");
+        return 0;
     }
 
     // Socket options
@@ -137,25 +137,35 @@ udp_serve(mod_args *ma)
     socklen_t sock_size, tmp_sock_size;
 
     if (Prefs.ip.v6) {
-	struct sockaddr_in6 *sin = safe_alloc(sizeof(*sin));
+        struct sockaddr_in6 *sin = safe_alloc(sizeof(*sin));
 
-	memset(sin, 0, sizeof(*sin));
-	sin->sin6_family = AF_INET6;
-	sin->sin6_addr = in6addr_any;
-	sin->sin6_port = htons(atoi(Prefs.ip.port));
+        memset(sin, 0, sizeof(*sin));
+        sin->sin6_family = AF_INET6;
+        if (Prefs.ip.address) {
+            memcpy(&(sin->sin6_addr.s6_addr[0]), Prefs.ip.address, strlen(Prefs.ip.address));
+        }
+        else {
+            sin->sin6_addr = in6addr_any;
+        }
+        sin->sin6_port = htons(atoi(Prefs.ip.port));
 
-	servaddr = (struct sockaddr *) sin;
-	sock_size = sizeof(struct sockaddr_in6);
+        servaddr = (struct sockaddr *) sin;
+        sock_size = sizeof(struct sockaddr_in6);
     } else {
-	struct sockaddr_in *sin = safe_alloc(sizeof(*sin));
+        struct sockaddr_in *sin = safe_alloc(sizeof(*sin));
 
-	memset(sin, 0, sizeof(*sin));
-	sin->sin_family = AF_INET;
-	sin->sin_addr.s_addr = htonl(INADDR_ANY);
-	sin->sin_port = htons(atoi(Prefs.ip.port));
+        memset(sin, 0, sizeof(*sin));
+        sin->sin_family = AF_INET;
+        if (Prefs.ip.address) {
+            sin->sin_addr.s_addr = htonl((uint32_t)*Prefs.ip.address);
+        }
+        else {
+            sin->sin_addr.s_addr = htonl(INADDR_ANY);
+        }
+        sin->sin_port = htons(atoi(Prefs.ip.port));
   
-	servaddr = (struct sockaddr *) sin;
-	sock_size = sizeof(struct sockaddr_in);
+        servaddr = (struct sockaddr *) sin;
+        sock_size = sizeof(struct sockaddr_in);
     }
     sd = socket(servaddr->sa_family, SOCK_DGRAM, IPPROTO_UDP);
     if (sd == -1) XLE("Server: socket");
@@ -165,84 +175,84 @@ udp_serve(mod_args *ma)
     setsockopt(sd, SOL_SOCKET, SO_SNDBUF, &socket_buff_len, sizeof(size_t));
     setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
     if (bind(sd, servaddr, sock_size) == -1) {
-	XLE("Server: bind");
+        XLE("Server: bind");
     }
 	
     struct sockaddr *from = safe_alloc(sock_size);
     while (1) {		
-	char *data;
+        char *data;
 
-	memset(from, 0, sock_size);
+        memset(from, 0, sock_size);
 
-	// Handshake
-	udp_handshake uh;
-	tmp_sock_size = sock_size;
-	if (recvfrom(sd, &uh, sizeof(uh), 0, from, &tmp_sock_size) == -1) {
-	    LE("Server: recvfrom");
-	    return 0;
-	}
+        // Handshake
+        udp_handshake uh;
+        tmp_sock_size = sock_size;
+        if (recvfrom(sd, &uh, sizeof(uh), 0, from, &tmp_sock_size) == -1) {
+            LE("Server: recvfrom");
+            return 0;
+        }
 
-	int response;
-	if (uh.h.size > 0 && uh.h.tries > 0 && uh.frag_size > 0 && uh.frag_size <= uh.h.size) {
-	    data = safe_alloc(uh.h.size);
+        int response;
+        if (uh.h.size > 0 && uh.h.tries > 0 && uh.frag_size > 0 && uh.frag_size <= uh.h.size) {
+            data = safe_alloc(uh.h.size);
 
-	    response = 1;
-	    if (sendto(sd, &response, sizeof(response), 0, from, sock_size) == -1) {
-		LE("Server: sendto");
-		return false;
-	    }
+            response = 1;
+            if (sendto(sd, &response, sizeof(response), 0, from, sock_size) == -1) {
+                LE("Server: sendto");
+                return false;
+            }
 	    
-	} else {
-	    response = 0;
-	    if (sendto(sd, &response, sizeof(response), 0, from, sock_size) == -1) {
-		LE("Server: sendto");
-		return false;
-	    }
+        } else {
+            response = 0;
+            if (sendto(sd, &response, sizeof(response), 0, from, sock_size) == -1) {
+                LE("Server: sendto");
+                return false;
+            }
 
-	    L("Server: handshake failed!");
+            L("Server: handshake failed!");
 
-	    continue;
-	}
+            continue;
+        }
 	
-	// Measure-loop
-	for (size_t i = 0; i < uh.h.tries; i++) {
-	    size_t bytes;
-	    ssize_t rc;
+        // Measure-loop
+        for (size_t i = 0; i < uh.h.tries; i++) {
+            size_t bytes;
+            ssize_t rc;
 
-	    for (bytes = 0; bytes < uh.h.size; bytes += rc) {
-		tmp_sock_size = sock_size;
-		rc = recvfrom(sd, data + bytes, uh.h.size - bytes,
-			      0, from, &tmp_sock_size);
-		if (rc == -1) {
-		    LE("Server: recvfrom");
-		    return false;
-		}
-	    }
+            for (bytes = 0; bytes < uh.h.size; bytes += rc) {
+                tmp_sock_size = sock_size;
+                rc = recvfrom(sd, data + bytes, uh.h.size - bytes,
+                              0, from, &tmp_sock_size);
+                if (rc == -1) {
+                    LE("Server: recvfrom");
+                    return false;
+                }
+            }
 
-	    for (bytes = 0; bytes < uh.h.size; bytes += rc) {
-		rc = sendto(sd, data + bytes, 
-			   (bytes + uh.frag_size) > uh.h.size ? uh.h.size - bytes : uh.frag_size, 
-			    0, from, sock_size);
-		if (rc == -1) {
-		    LE("Server: sendto");
-		    return false;
-		}
-	    }
-	}
+            for (bytes = 0; bytes < uh.h.size; bytes += rc) {
+                rc = sendto(sd, data + bytes, 
+                            (bytes + uh.frag_size) > uh.h.size ? uh.h.size - bytes : uh.frag_size, 
+                            0, from, sock_size);
+                if (rc == -1) {
+                    LE("Server: sendto");
+                    return false;
+                }
+            }
+        }
 	
-	free(data);
+        free(data);
     }
 
     return 1;
 }
 
 const net_mod mod_udp = { "UDP",
-			  "udp",
-			  IP_OPTS"F:",
-			  IP_USAGE
-			  "\n\t-F size: Send packets fragmented to `size'",
-			  udp_handle_arg,
-			  udp_init,
-			  udp_measure,
-			  udp_serve,
-			  udp_cleanup };
+                          "udp",
+                          IP_OPTS"F:",
+                          IP_USAGE
+                          "\n\t-F size: Send packets fragmented to `size'",
+                          udp_handle_arg,
+                          udp_init,
+                          udp_measure,
+                          udp_serve,
+                          udp_cleanup };

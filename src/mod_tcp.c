@@ -43,7 +43,7 @@ static struct tcp_prefs {
     ip_prefs ip;
 
     size_t frag_size;
-} Prefs = { { false, IP_DEF_PORT, 0 }, 0 };
+} Prefs = { { false, IP_DEF_ADDRESS, IP_DEF_PORT, 0 }, 0 };
 
 typedef struct {
     handshake h;
@@ -140,7 +140,7 @@ tcp_serve(mod_args *ma)
     hints.ai_family = Prefs.ip.v6? AF_INET6 : AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_PASSIVE;
-    rc = getaddrinfo(NULL, Prefs.ip.port, &hints, &ai);
+    rc = getaddrinfo(Prefs.ip.address, Prefs.ip.port, &hints, &ai);
     if (rc != 0) {
 	L(gai_strerror(rc));
 	return false;

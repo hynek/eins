@@ -23,15 +23,18 @@
 
 #include <netdb.h>
 
+#define IP_DEF_ADDRESS NULL
 #define IP_DEF_PORT "8910"
 #define IP_OPTS "6P:H:"
 #define IP_USAGE "\t-6: Use IPv6\n" \
+    "\t-a address: Bind to `address'\n" \
     "\t-P port: Use `port'\n" \
     "\t-H size: Prepend with a header of `size' bytes"
 #define IP_DEF_SOCKET_BUFF 524288
 
 typedef struct {
     bool v6;
+    char *address;
     char *port;
     size_t hdr_size;
 } ip_prefs;

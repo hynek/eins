@@ -47,6 +47,10 @@ ip_handle_arg(ip_prefs *p, char opt, char *arg)
 	p->v6 = true;
 	return true;
 	    
+    case 'a':
+        p->address = safe_strdup(arg);
+        return true;
+
     case 'P':
 	p->port = safe_strdup(arg);
 	return true;
