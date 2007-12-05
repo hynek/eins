@@ -192,7 +192,7 @@ sctp_init(mod_args *ma)
     len = sizeof(status);
     status.sstat_assoc_id = 1;
 
-    if (getsockopt(Sock, IPPROTO_SCTP, SCTP_STATUS, &status, &len) == -1) {
+    if (getsockopt(Sock, IPPROTO_SCTP, SCTP_STATUS, &status, (socklen_t *)&len) == -1) {
 		L("get sock opt\n");
     }
     L("Got: input streams: %d, output streams: %d\n",
@@ -314,8 +314,7 @@ sctp_serve(mod_args *ma)
 	len = sizeof(status);
 	status.sstat_assoc_id = 0;
 
-	if (getsockopt(asd, IPPROTO_SCTP,
-				SCTP_STATUS, &status, &len) == -1) {
+	if (getsockopt(asd, IPPROTO_SCTP, SCTP_STATUS, &status, (socklen_t *)&len) == -1) {
 		L("get sock opt\n");
 	}
 
