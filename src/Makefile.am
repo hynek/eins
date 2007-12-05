@@ -1,7 +1,7 @@
 bin_PROGRAMS = eins
 eins_SOURCES = eins.c log.c log.h measure.c mod_tcp.c mod_udp.c	\
-		mod_malloc.c mod_accept.c util.c util_ip.c
-eins_LDADD = -lm
+		mod_malloc.c mod_accept.c mod_sctp.c util.c util_ip.c
+eins_LDADD = -lm -lsctp
 
 if WITH_BMI
 eins_SOURCES += mod_bmi.c

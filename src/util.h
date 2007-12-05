@@ -31,5 +31,6 @@
 void *safe_alloc(size_t);
 char *safe_strdup(const char *);
 void randomize_buffer(char *, long long);
+int split(char **stringp, const char *delim, char ***list);
 
 #endif /* UTIL_H */

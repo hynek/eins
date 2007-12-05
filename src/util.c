@@ -62,3 +62,34 @@ randomize_buffer(char *buf, long long size)
 	buf[i] = rand();
     }
 }
+
+/* 
+ * split() - split given string into an array by given delimter 
+ *
+ * usage example: 
+ * 
+ * char str[]="Hello world! Test123!", *s = str;
+ * char **list;
+ * int n,i;
+ *
+ * n = split(&s, " ", &list);
+ * for (i=0; i<n; i++) printf("list[%d]=%s\n", i, list[i]);
+ *  
+ */
+int split(char **stringp, const char *delim, char ***list) 
+{ 
+	char *pt;
+	int n=0;
+
+	*list = NULL;
+	for(pt=strsep(stringp, delim); pt!=NULL; pt=strsep(stringp, delim)){
+
+		*list = realloc( *list, (n+1)*sizeof(**list) );    
+		(*list)[n] = safe_alloc( strlen(pt)+1 );          
+		strcpy( (*list)[n], pt);
+
+		n++;
+	}
+
+	return n;
+}

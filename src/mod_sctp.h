@@ -18,34 +18,11 @@
  * 02110-1301, USA.
  */
 
-#ifndef MODULES_H
-#define MODULES_H
+#ifndef MOD_SCTP_H
+#define MOD_SCTP_H
 
 #include "mods.h"
 
-#include "mod_tcp.h"
-#include "mod_accept.h"
-#include "mod_sctp.h"
-#include "mod_udp.h"
-#include "mod_malloc.h"
-#ifdef WITH_BMI
-#include "mod_bmi.h"
-#endif // WITH_BMI
-#ifdef WITH_NEON
-#include "mod_neon.h"
-#endif // WITH_NEON
+extern const net_mod mod_sctp;
 
-const net_mod *Modules[] = { &mod_tcp,
-			     &mod_udp,
-                 &mod_accept,
-                 &mod_sctp,
-			     &mod_malloc,
-#ifdef WITH_BMI
-			     &mod_bmi,
-#endif // WITH_BMI
-#ifdef WITH_NEON
-			     &mod_neon,
-#endif // WITH_NEON
-			     NULL };
-
-#endif // MODULES_H
+#endif // MOD_SCTP_H
