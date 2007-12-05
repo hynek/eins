@@ -53,16 +53,6 @@
 #define SCTP_INPUT_STREAMS 1
 #define SCTP_OUTPUT_STREAMS 1
 
-void showbuffer_internal(char *buf, int size, int process)
-{
-    int i;
-    printf("Prozess: %d, size %d-", process, size);
-    for (i = 0; i < size; i++) {
-        printf("%d ", (unsigned char) buf[i]);
-    }
-    printf("\n");
-}
-
 static struct sctp_prefs {
     ip_prefs ip;
 
@@ -256,7 +246,7 @@ sctp_serve(mod_args *ma)
 		 * todo: what about ipv6
 		 */ 
 		ma->target = "127.0.0.1";
-		//L("you need to specifiy at least one address for sctp bindx");
+		//L("you need to specifiy at least one address for sctp_bindx()");
 		//exit(1);
     }    
     if (Prefs.ip.address != NULL){
