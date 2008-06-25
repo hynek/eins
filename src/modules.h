@@ -25,7 +25,6 @@
 
 #include "mod_tcp.h"
 #include "mod_accept.h"
-#include "mod_sctp.h"
 #include "mod_udp.h"
 #include "mod_malloc.h"
 #ifdef WITH_BMI
@@ -34,11 +33,13 @@
 #ifdef WITH_NEON
 #include "mod_neon.h"
 #endif // WITH_NEON
+#ifdef WITH_SCTP
+#include "mod_sctp.h"
+#endif // WITH_SCTP
 
 const net_mod *Modules[] = { &mod_tcp,
 			     &mod_udp,
-                 &mod_accept,
-                 &mod_sctp,
+			     &mod_accept,
 			     &mod_malloc,
 #ifdef WITH_BMI
 			     &mod_bmi,
@@ -46,6 +47,9 @@ const net_mod *Modules[] = { &mod_tcp,
 #ifdef WITH_NEON
 			     &mod_neon,
 #endif // WITH_NEON
+#ifdef WITH_SCTP
+			     &mod_sctp,
+#endif // WITH_SCTP
 			     NULL };
 
 #endif // MODULES_H
