@@ -12,23 +12,23 @@ AC_PROG_CC(gcc)
 CFLAGS="-std=gnu99 -Wall $CFLAGS"
 
 # Checks for libraries.
-AC_ARG_WITH(pvfs2, [AC_HELP_STRING([--with-pvfs2=DIR], [Compile also the BMI module])], [ac_pvfs2_path="$withval"], [ac_pvfs2_path="no"])
+AC_ARG_WITH(pvfs2, [AC_HELP_STRING([--with-pvfs2=DIR], [compile also the BMI module])], [ac_pvfs2_path="$withval"], [ac_pvfs2_path="no"])
 if test "x$ac_pvfs2_path" != "xno"; then
    CFLAGS="-I$ac_pvfs2_path/include -I$ac_pvfs2_path/src/io/bmi -L$ac_pvfs2_path/lib -DWITH_BMI $CFLAGS"
 fi
 AM_CONDITIONAL(WITH_BMI, test "x$ac_pvfs2_path" != "xno")
 
-AC_ARG_WITH(neon, [AC_HELP_STRING([--with-neon=DIR], [Compile also the NEON-related modules])], [ac_neon_path="$withval"], [ac_neon_path="no"])
+AC_ARG_WITH(neon, [AC_HELP_STRING([--with-neon=DIR], [compile also the NEON-related modules])], [ac_neon_path="$withval"], [ac_neon_path="no"])
 if test "x$ac_neon_path" != "xno"; then
    CFLAGS="-L$ac_neon_path/src -I$ac_neon_path/src/neon -DWITH_NEON $CFLAGS"
 fi
 AM_CONDITIONAL(WITH_NEON, test "x$ac_neon_path" != "xno")
 
-AC_ARG_WITH(sctp, [AC_HELP_STRING([--with-sctp=DIR], [Compile also the SCTP module])], [ac_sctp_path="$withval"], [ac_sctp_path="no"])
+AC_ARG_WITH(sctp, [AC_HELP_STRING([--with-sctp=DIR], [compile also the SCTP module])], [ac_sctp_path="$withval"], [ac_sctp_path="no"])
 if test "x$ac_sctp_path" != "xno"; then
    CFLAGS="-I$ac_sctp_path/include -DWITH_SCTP $CFLAGS"
 fi
-AM_CONDITIONAL(WITH_BMI, test "x$ac_pvfs2_path" != "xno")
+AM_CONDITIONAL(WITH_SCTP, test "x$ac_sctp_path" != "xno")
 
 # Checks for header files.
 AC_HEADER_STDC
