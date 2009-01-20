@@ -42,7 +42,7 @@ static struct udp_prefs {
     ip_prefs ip;
 
     size_t frag_size;
-} Prefs = { { false, IP_DEF_PORT, 0 }, 0 };
+} Prefs = { { false, IP_DEF_ADDRESS, IP_DEF_PORT, 0 }, 0 };
 
 typedef struct {
     handshake h;
