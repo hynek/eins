@@ -199,8 +199,8 @@ main(int argc, char **argv)
 
     if (!p.no_time) {
         // Obtain time which is spent on measuring
-        get_time(ta);
-        get_time(tb);
+        get_time(&ta);
+        get_time(&tb);
         measuredelta = time_diff(tb, ta);
     }
 

@@ -48,6 +48,9 @@ AC_FUNC_STRFTIME
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday localtime_r memset socket strdup strerror])
 
+# check for clock_gettime (sc)
+AC_SEARCH_LIBS([clock_gettime], [rt])
+
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 AC_OUTPUT
