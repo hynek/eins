@@ -1,4 +1,4 @@
-/* 
+/*
  * eins - A tool for benchmarking networks.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
@@ -71,8 +71,8 @@ typedef struct {
 
 // Handshake
 typedef struct {
-    size_t tries;
-    size_t size;
+    int32_t tries;
+    int32_t size;
 } handshake;
 
 #endif //MODS_H
