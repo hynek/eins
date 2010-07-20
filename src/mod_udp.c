@@ -46,8 +46,6 @@ static struct udp_prefs {
 
 typedef struct {
     handshake h;
-    ip_handshake ip;
-
     int32_t frag_size;
 } udp_handshake;
 
@@ -192,7 +190,7 @@ udp_serve(mod_args *ma)
             return 0;
         }
 
-        int response;
+        uint8_t response;
         if (uh.h.size > 0 && uh.h.tries > 0 && uh.frag_size > 0 && uh.frag_size <= uh.h.size) {
             data = safe_alloc(uh.h.size);
 
