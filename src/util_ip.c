@@ -152,7 +152,7 @@ ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, st
 bool
 ip_handshake_client(int sd, handshake *h, size_t size)
 {
-    uint8_t response;
+    uint32_t response;
 
     if (send(sd, h, size, 0) == -1) {
 	XLE("Client: send"); 
@@ -167,7 +167,7 @@ ip_handshake_client(int sd, handshake *h, size_t size)
 bool
 ip_handshake_server(int sd, handshake *eh, size_t size)
 {
-    uint8_t response;
+    uint32_t response;
 
     if (recv(sd, eh, size, 0) == -1) {
 	LE("Server: recv");

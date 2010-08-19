@@ -22,6 +22,7 @@
 #define MODS_H
 
 // ISO
+#include <stdint.h>
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -71,8 +72,8 @@ typedef struct {
 
 // Handshake
 typedef struct {
-    int32_t tries;
-    int32_t size;
+    uint32_t tries;
+    uint32_t size;
 } handshake;
 
 #endif //MODS_H
