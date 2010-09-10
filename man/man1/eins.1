@@ -1,0 +1,170 @@
+.TH eins 1 "September 10, 2010" "SVN revision 5793" "USER COMMANDS" 
+.SH NAME
+eins \- timing and bandwidth measurement tool, especially for networks
+.SH SYNOPSIS
+.B eins
+\-t type [MODOPTS] [\-i numtries] [\-n] [\-q] [\-u until] [\-b step by] host len
+.SH DESCRIPTION
+Eins is a small network benchmarking util, written at the Institute of
+Computer Science of the University in Potsdam. It can be used to measure
+multiple network protocols and and some non-network related performance 
+metrics. Measurement methods are available by modules. See module section
+for details.
+.PP
+The basic idea of eins is to allow measurements with varying packet sizes.
+Each measurement is repeated several times to improve the statistical quality. 
+The method itself, packet size and number of repetitions per packet size can 
+be configured via command line arguments. See the following sections for details.
+
+.SH OPTIONS
+
+.TP
+\-t type
+use the given measurement module. Note, that is parameter has to be given
+in front of MODOPTS 
+.TP
+MODOPTS
+module specific options. See module section for details.
+.TP
+\-i numtries
+Number of iterations used for each mesaurement (default is 54)
+.TP
+\-n 
+be quiet, do not print results (useful for profiling) 
+.TP
+\-q
+be more quiet, omit progress indicator
+.TP
+\-u limit
+do the measurement up to the given limit starting from len paramater
+.TP
+\-b step
+step the size of the measurement packets by the given step.
+.TP 
+host
+specifies the measurement partner
+.TP
+len
+The (initial) size of the measurement packets. If no limit is specified
+only one measurement with the given size will be done.
+
+
+
+.SH OUTPUT
+Eins outputs the measurement results in four columns with the following
+content: 
+.TP
+size
+The size of the measurement packet in Bytes
+.TP
+median
+The median of all measured times (see numtries parameter) in microseconds.
+See module section for how the times are determined.
+.TP 
+bandwith
+This just the quotient of the first and the second column and
+is therefore given in MByte/s
+.TP
+stddev
+The standard deviation of all measured times.
+
+
+.SH MODULES
+
+.SS TCP measurement
+This module basicly does a ping-pong measurement between a TCP server and
+a client. Each measurement packet is sent to the server which immediatly
+sends the packet back to the client. The time between the according send 
+and recv system call on the client side is measured and devided by 2. Thus,
+the reported time is equal to the round-trip time (RTT).
+.PP
+To use the TCP module use 'tcp' as value for the type parameter. To start
+a measurement a server instance of Eins must be started. To do so, use
+\-s as one of the module options. For further options see Common IP Options.
+
+.SS UDP measurement
+UDP measurement is done in a similar fashion as TCP. Sender and Receiver 
+play a ping pong game with the measurement packets. The time between send
+and reception of the packets is measured and devided by two (RTT) and gives
+the resulting time of measurement.
+.PP
+To use the TCP module use 'udp' as value for the type parameter. Similar to
+TCP, a server instance of Eins must be started with the \-s option. A special
+feature for UDP measurements is the fragmentation of measurement packets by
+Eins. By using the optional \-F option, followed by the desired fragment size
+in Bytes, eins will split all packets by itself before sending them via
+system call. For further options see Common IP Options.
+
+.SS Common IP Options
+The following Options are available for the measurement via IP networks. It is
+safe to use them as MODOPTS (note that these have to occur after the type 
+paramater)
+.TP
+\-6
+Use Internet Protocol (IP) version 6. Version 4 is used by default
+.TP
+\-a address 
+bind the socket to the given address (usefull when measurement should use
+a specfic interface/network)
+.TP
+\-P port
+Use the given port fot the sockets. A Server instance of eins will listen
+on this port, while a client instance of eins will try to connect to this
+port. The default value (if this parameter is not given) is 8910. 
+.TP
+\-H size
+Prepend each packet with a header of the given size. Be aware of this 
+feature: At the time of writing, the according code might be broken.
+
+Please note, that for network measurement, a packet size (given by the 'len' 
+parameter) of zero will cause a client to abort the measurement.
+
+.SS Accept time measurement
+With the accept module (usage: give 'accept' as value for the 'type' parameter)
+measurement of accept time can be done. The measured time is the time that a
+connect call on TCP client sockets takes. For such a measurement a TCP server
+instance of eins has to be started (see TCP module for further details). This
+module does not have any other options than the default ones.
+
+.SS Memory management timings
+This module allows the benchmarking of malloc and free call pairs. During each
+measurement step a block of memory with the specified size is allocated via
+malloc(3) syscall and disposed via free(3). The time that both calls take
+is measured.
+
+.SS Note on time measurement
+Time measurement in Eins is done by a call to clock_gettime. CLOCK_MONOTONIC
+is used as reference clock. Therefore the measurements are not affected by
+a system clock modification (caused by user or ntp, e.g.) or power management
+features that lowers cpu clock rates. 
+
+.SH EXAMPLES
+
+.SS Simple TCP/UDP measurement example
+Start a single TCP measurement on localhost with packet size of 1500.  
+To do a UDP measurement, replace 'tcp' with 'udp'.
+
+eins -t tcp -s &
+
+eins -t tcp localhost 1500
+
+.SS Extended TCP/UDP measurement example
+A measurement via TCP with a starting packet size of 4 and upper limit of
+2048 with a step of 2 bytes is done. Each measurement is repeated 100 times.
+The Server should use port 1234 for communication. Both server and client use 
+IPv6. The server is startet on a machine named example.domain
+
+eins -t tcp -s -6 -P 1234 
+
+eins -t tcp -6 -P 1234 -i 100 -b 2 -u 2048 example.domain 4
+
+.SS Measure Malloc/Free timings
+A straight forward exmaple (note that you have to give the host option - 
+althought it is ignored)
+
+eins -t malloc -u 1024 localhost 1
+
+.SH AUTHORS
+Lars Schneidenbach and Hynek Schlawack (initial and most of eins code)
+.PP
+Joerg Zinke (bugfixes) and Steffen Christgau (bugfixes and man page)
