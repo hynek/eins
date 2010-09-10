@@ -5,7 +5,7 @@ eins \- timing and bandwidth measurement tool, especially for networks
 .B eins
 \-t type [MODOPTS] [\-i numtries] [\-n] [\-q] [\-u until] [\-b step by] host len
 .SH DESCRIPTION
-Eins is a small network benchmarking util, written at the Institute of
+eins is a small network benchmarking util, written at the Institute of
 Computer Science of the University in Potsdam. It can be used to measure
 multiple network protocols and and some non-network related performance 
 metrics. Measurement methods are available by modules. See module section
@@ -20,7 +20,7 @@ be configured via command line arguments. See the following sections for details
 
 .TP
 \-t type
-use the given measurement module. Note, that is parameter has to be given
+use the given measurement module. Note, that this parameter has to be given
 in front of MODOPTS 
 .TP
 MODOPTS
@@ -51,7 +51,7 @@ only one measurement with the given size will be done.
 
 
 .SH OUTPUT
-Eins outputs the measurement results in four columns with the following
+eins outputs the measurement results in four columns with the following
 content: 
 .TP
 size
@@ -79,7 +79,7 @@ and recv system call on the client side is measured and devided by 2. Thus,
 the reported time is equal to the round-trip time (RTT).
 .PP
 To use the TCP module use 'tcp' as value for the type parameter. To start
-a measurement a server instance of Eins must be started. To do so, use
+a measurement a server instance of eins must be started. To do so, use
 \-s as one of the module options. For further options see Common IP Options.
 
 .SS UDP measurement
@@ -89,9 +89,9 @@ and reception of the packets is measured and devided by two (RTT) and gives
 the resulting time of measurement.
 .PP
 To use the TCP module use 'udp' as value for the type parameter. Similar to
-TCP, a server instance of Eins must be started with the \-s option. A special
+TCP, a server instance of eins must be started with the \-s option. A special
 feature for UDP measurements is the fragmentation of measurement packets by
-Eins. By using the optional \-F option, followed by the desired fragment size
+eins. By using the optional \-F option, followed by the desired fragment size
 in Bytes, eins will split all packets by itself before sending them via
 system call. For further options see Common IP Options.
 
@@ -133,7 +133,7 @@ malloc(3) syscall and disposed via free(3). The time that both calls take
 is measured.
 
 .SS Note on time measurement
-Time measurement in Eins is done by a call to clock_gettime. CLOCK_MONOTONIC
+Time measurement in eins is done by a call to clock_gettime. CLOCK_MONOTONIC
 is used as reference clock. Therefore the measurements are not affected by
 a system clock modification (caused by user or ntp, e.g.) or power management
 features that lowers cpu clock rates. 
