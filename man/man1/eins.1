@@ -6,14 +6,14 @@ eins \- timing and bandwidth measurement tool, especially for networks
 \-t type [MODOPTS] [\-i numtries] [\-n] [\-q] [\-u until] [\-b step by] host len
 .SH DESCRIPTION
 eins is a small network benchmarking util, written at the Institute of
-Computer Science of the University in Potsdam. It can be used to measure
-multiple network protocols and and some non-network related performance 
-metrics. Measurement methods are available by modules. See module section
-for details.
+Computer Science, University of Potsdam. It can measure latency/required time
+of different tasks (network transfer, memory allocation) and determines the 
+bandwidth. The measurement types are exposed by different modules. See module
+section for details.
 .PP
 The basic idea of eins is to allow measurements with varying packet sizes.
 Each measurement is repeated several times to improve the statistical quality. 
-The method itself, packet size and number of repetitions per packet size can 
+The measurement type, packet size and number of repetitions per packet size can 
 be configured via command line arguments. See the following sections for details.
 
 .SH OPTIONS
@@ -76,7 +76,8 @@ This module basicly does a ping-pong measurement between a TCP server and
 a client. Each measurement packet is sent to the server which immediatly
 sends the packet back to the client. The time between the according send 
 and recv system call on the client side is measured and devided by 2. Thus,
-the reported time is equal to the round-trip time (RTT).
+the reported time is equal to the half round-trip time (RTT) which can
+be assumed to be the packet's latency. But be aware of this assumption!
 .PP
 To use the TCP module use 'tcp' as value for the type parameter. To start
 a measurement a server instance of eins must be started. To do so, use
@@ -84,7 +85,7 @@ a measurement a server instance of eins must be started. To do so, use
 
 .SS UDP measurement
 UDP measurement is done in a similar fashion as TCP. Sender and Receiver 
-play a ping pong game with the measurement packets. The time between send
+play a ping pong game with the measurement packets. The time between transmission
 and reception of the packets is measured and devided by two (RTT) and gives
 the resulting time of measurement.
 .PP
@@ -124,13 +125,13 @@ With the accept module (usage: give 'accept' as value for the 'type' parameter)
 measurement of accept time can be done. The measured time is the time that a
 connect call on TCP client sockets takes. For such a measurement a TCP server
 instance of eins has to be started (see TCP module for further details). This
-module does not have any other options than the default ones.
+module does not have any specific options.
 
 .SS Memory management timings
 This module allows the benchmarking of malloc and free call pairs. During each
 measurement step a block of memory with the specified size is allocated via
 malloc(3) syscall and disposed via free(3). The time that both calls take
-is measured.
+is measured. This module does not have any specific options.
 
 .SS Note on time measurement
 Time measurement in eins is done by a call to clock_gettime. CLOCK_MONOTONIC
@@ -159,7 +160,7 @@ eins -t tcp -s -6 -P 1234
 eins -t tcp -6 -P 1234 -i 100 -b 2 -u 2048 example.domain 4
 
 .SS Measure Malloc/Free timings
-A straight forward exmaple (note that you have to give the host option - 
+A straight forward example (note that you have to give the host option - 
 althought it is ignored)
 
 eins -t malloc -u 1024 localhost 1
