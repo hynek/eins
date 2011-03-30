@@ -1,0 +1,3 @@
+- Adding headers (option `-H') is broken
+
+- UDP-code is unreliable

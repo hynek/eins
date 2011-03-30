@@ -1,0 +1,86 @@
+2007-06-12  Lars Schneidenbach  <lschneid@cs.uni-potsdam.de>
+
+	* src/mod_tcp.c (tcp_serve): handle ip-address option
+	* src/mod_udp.c (udp_serve): handle ip-address option
+	* src/mod_accept.c (accept_serve): handle ip-address option
+
+	* src/util_ip (ip_prefs): included preferred ip-address as
+	commandline parameter
+
+2006-12-01  Lars Schneidenbach  <lschneid@cs.uni-potsdam.de>
+
+	* src/mod_accept.c: new module to measure connect times
+
+2006-10-26  Lars Schneidenbach  <lschneid@cs.uni-potsdam.de>
+
+	* src/mod_tcp.c: Fragments included, TODO: put
+	fragments code from tcp and udp together into ip!
+
+2006-09-17  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* src/mod_malloc.c: Added basic memory benchmark.
+
+	* src/mod_neon.c: Added support for NEON.
+
+2006-06-27  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* src/mod_tcp.c (tcp_serve): Better handling of long messages.
+
+2006-06-22  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* Global: Changed completely build system and uses
+	autoconf/automake for building now.
+
+2006-05-30  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* mod_bmi.c (bmi_measure): Added check whether the data received is
+	the same a the sent.
+
+2006-05-29  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* util_ip.c (ip_measure): Added check whether the data received is
+	the same a the sent.
+	(ip_measure): Replaced `int's with `size_t's in the signature.
+	(ip_measure): Fixed a small introduced memleak.
+
+2006-05-25  Lars Schneidenbach  <lschneid@cs.uni-potsdam.de>
+
+	* AUTHORS: completed author list
+
+2006-05-22  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* mod_bmi.c (bmi_serve): Fixed memleak.
+
+	* mod_udp.c (udp_init): Sanitized fragmentation.
+
+2006-05-15  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* eins.c (parse_args): Added check for valid `-i'.
+
+	* mod_bmi.c (bmi_cleanup): Fixed memleak.
+
+2006-05-12  Hynek Schlawack  <hs+cl@ox.cx>
+
+	* mod_bmi.c (bmi_init): BMI_initialize() get run only the first
+	time now.
+	(bmi_cleanup): BMI_finalize() doesn't get called at all
+	anymore. The reason for these changes is that BMI starts to behave
+	strange when BMI_initialize()/BMI_finalize() get run too
+	often (~1021).
+
+	* eins.c (main): Enhaced progress indicator (added absolute value
+	in bytes)
+
+	* mod_bmi.c (bmi_init): Added code to handle immediate completion.
+
+	* eins.c (main): Added support for iterating through several
+	values.
+	(main): Added simple progress indicator.
+	(parse_args): Adjusted to new arguments.
+
+	* eins.h (prefs): Added general prefs struct. Removed `no_time'
+	from mod_args.
+
+	* eins.c (GENERAL_USAGE): Clarified and enhaced usage.
+
+	* ChangeLog: File added.

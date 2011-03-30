@@ -1,0 +1,52 @@
+Extending `eins' is intended to be easy and unobstrusive.
+
+1. Create a new file (convention is to call it mod_NAME.c)
+and implement the following functions:
+
+- bool NAME_handle_arg(char opt, char *arg);
+
+Gets called while parsing arguments. Return `true' for valid options
+and `false' on errors.
+
+- bool NAME_init(mod_args *ma);
+
+Connect (if appropriate) to the server, set up preferences and perform
+a handshake (feel free to create your own handshake-struct, as long as
+the struct starts with `handshake'). Report success via the return code.
+
+- double NAME_measure();
+
+Run a test and return the time in µs.
+
+- void NAME_cleanup();
+
+Close connections, remove temporary files...
+
+- bool NAME_serve(mod_args *ma);
+
+Implement the server-sided loop, frankly handle connections.
+
+
+2. Create a `net_mod' at the end of your .c-file and add an `extern'
+definition to mod_NAME.h. Include this in modules.h and add your
+`net_mod' (called `mod_NAME' by convention) to the `Modules'
+array. `net_mod' is heavily commented in mods.h.
+
+If your module has external dependencies (libraries, header files,
+whatever), protect it using `#ifdef's. Call it `WITH_NAME'.
+
+
+3. Add new external dependencies as Options to `configure.am' and
+protect dependend code with `ifdefs' as in modules.h to make sure it
+compiles by default.
+
+
+-> It's best to have a look at the existing modules to get an idea. <-
+
+
+Useful tools
+============
+ - Use the macros from log.h for output.
+ - Use the functions from util.c for allocating.
+ - Use the functions from measure.o for measuring time.
+ - If implementing an IP-based module, have a look at util_ip.c/h.
