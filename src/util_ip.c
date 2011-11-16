@@ -78,13 +78,19 @@ ip_connect(char *host, char *port, struct addrinfo *hints)
     int sd;
     for (tmp = ai; tmp; tmp = tmp->ai_next) {
 	sd = socket(tmp->ai_family, tmp->ai_socktype, tmp->ai_protocol);
-	if (connect(sd, tmp->ai_addr, tmp->ai_addrlen) == 0)
-	    break;
+	if (sd == -1) {
+		L("socket: %s", strerror(errno));
+	}
+	if (connect(sd, tmp->ai_addr, tmp->ai_addrlen) == 0) {
+                break;
+	} else {
+		L("connect: %s", strerror(errno));
+	}
 	close(sd);
     }
 
     if (tmp == NULL) {
-	LE("Client: connect"); 
+	LE("Client: could not connect to the server"); 
 	return 0;
     }
 
