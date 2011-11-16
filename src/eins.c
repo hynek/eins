@@ -136,7 +136,7 @@ parse_args(int argc, char * argv[], mod_args *ma, prefs *p)
         default:
             if (nm) {
                 if (!nm->handle_arg(opt, optarg)) {
-                    L("Invalid option for `%s'.", nm->name);
+                    L("Invalid option %c for `%s'.", opt, nm->name);
                     return NULL;
                 }
             } else {
