@@ -1,9 +1,0 @@
-eins - A tool for measuring network-bandwidths and -latencies.
-
-eins is not sockping!
-
-Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
-
-Based on `sockping' by Lars Schneidenbach <lschneid@cs.uni.potsdam.de>.
-
-For cli arguments just run `eins' w/o arguments.
