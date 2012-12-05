@@ -1,12 +1,13 @@
 eins - A tool for measuring network bandwidths and latencies
 ============================================================
 
-This is a handy tool I wrote back in 2006 as part of my diploma thesis at the University of Potsdam for measuring bandwidths and latencies on various types of networks. It’s intended to be easily extendable with new types.
+This is a handy tool I wrote back in 2006 as part of my diploma thesis at the [University of Potsdam](http://www.cs.uni-potsdam.de) for measuring bandwidths and latencies on various types of networks. It’s intended to be easily extendable with new types.
 
 Currently, following types are supported:
 
+- BMI (network abstraction layer of [PVFS](http://www.pvfs.org))
 - NEON (internal project at UP)
-- SCTP
+- [SCTP](http://en.wikipedia.org/wiki/Stream_Control_Transmission_Protocol)
 - TCP
 - TCP, just connecting
 - UDP
