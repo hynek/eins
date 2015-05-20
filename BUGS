@@ -1,5 +1,3 @@
-- Since it uses rdtsc, you have to run it on single-core machines.
-
 - Adding headers (option `-H') is broken
 
 - UDP-code is unreliable
