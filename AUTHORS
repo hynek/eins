@@ -2,8 +2,8 @@ Hynek Schlawack <hs+eins@ox.cx> wrote `eins' by heavily generalizing
 `sockping'. He wrote the modules for TCP, UDP and BMI. He is also the
 current maintainer.
 
-I can't remember implementing the SCTP backend so I figure someone else was
-involved too. My best guess is Jörg Zinke.
+Jörg Jung fixed some bugs, implemented the SCTP as well as the TCP connect
+module. Steffen Christgau fixed various bugs and wrote the man page.
 
 Lars Schneidenbach <lschneid@cs.uni-potsdam.de> wrote the original
 `sockping' which still dominates `eins'' operating principle. He is also
