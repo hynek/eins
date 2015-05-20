@@ -1,60 +1,46 @@
 #include "measure.h"
+
 #include <math.h>
 #include <sys/time.h>
 #include <unistd.h>
-
-static double CLOCK;
-
-static long long
-rdtsc(void)
-{
-	unsigned int a, b;
-	__asm__ __volatile__("rdtsc" : "=d" (a), "=a" (b));
-	return ((long long) a << 32) + (long long) b;
-}
+#include <stdio.h>
+#include <errno.h>
 
 void
 init_timer(void)
 {
-	long long tsc_start, tsc_end;
-	struct timeval tv_start, tv_end;
+	// NOP
+}
 
-	tsc_start = rdtsc();
-	gettimeofday(&tv_start, NULL);
-	usleep(100000); /* delay must be < 1000000 to be portable */
-	tsc_end = rdtsc();
-	gettimeofday(&tv_end, NULL);
 
-	CLOCK = (double) (tsc_end-tsc_start) /
-		(1000000 * (tv_end.tv_sec - tv_start.tv_sec) + (tv_end.tv_usec - tv_start.tv_usec));
+void get_time(time_586 *time)
+{
+	if (clock_gettime(CLOCK_MONOTONIC, time) == -1)
+	{
+		perror("get_time failure");
+	}
 }
 
 double
 time_diff(time_586 b, time_586 a)
 {
-        double db, da, res;
+	/* calculate the difference between timestamps in microseconds (us) */
+	/* following lines are adapted from http://www.guyrutenberg.com/2007/09/22/profiling-code-using-clock_gettime/ */
+	time_586 tmp;
 
-	db =   (double) b.hi
-	     * (double) (1<<16)
-	     * (double) (1<<16)
-	     + (double) b.lo;
-
-	da =   (double) a.hi
-	     * (double) (1<<16)
-	     * (double) (1<<16)
-	     + (double) a.lo;
-
-	if (db < da) {
-		res = (    (double) (1<<16)
-			 * (double) (1<<16)
-			 * (double) (1<<16)
-			 * (double) (1<<16)
-			 + db-da
-			) /(double)CLOCK;
+	/* assumption b is in future of a */
+	if (a.tv_nsec > b.tv_nsec) {
+		/* fix naive subtraction error */
+		tmp.tv_sec = (b.tv_sec - a.tv_sec) - 1;
+		tmp.tv_nsec = (b.tv_nsec - a.tv_nsec) + 1E+9;
 	} else {
-		res = (db-da)/(double)CLOCK;
+		/* no special case, just do the subtraction */
+		tmp.tv_sec = b.tv_sec - a.tv_sec;
+		tmp.tv_nsec = b.tv_nsec - a.tv_nsec;
 	}
-	return res;
+
+	/* convert nanoseconds to microseconds */
+	return (tmp.tv_sec * 1.0E+6) + (tmp.tv_nsec / 1000.0);
 }
 
 

@@ -77,13 +77,13 @@ accept_measure()
     for (tmp = ai; tmp; tmp = tmp->ai_next) {
         sd = socket(tmp->ai_family, tmp->ai_socktype, tmp->ai_protocol);
 
-        get_time(ta);
+        get_time(&ta);
         if (connect(sd, tmp->ai_addr, tmp->ai_addrlen) == 0)
             break;
         close(sd);
     }
 
-	get_time(tb);
+	get_time(&tb);
 
     if (tmp == NULL) {
         LE("Client: connect"); 

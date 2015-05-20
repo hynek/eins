@@ -1,4 +1,4 @@
-/* 
+/*
  * eins - A tool for benchmarking networks.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // POSIX
 #include <getopt.h>
@@ -48,7 +49,7 @@
     "\n"\
     "Server: eins -s -t type\n" \
     "\t-s: Start as server"
-               
+
 #define DEF_OPTS "st:i:nu:b:q"
 
 static void
@@ -73,7 +74,7 @@ build_optstr(const net_mod *m[])
     for (int i = 0; m[i]; i++) {
         len += strlen(m[i]->opts);
     }
-    
+
     char *str = safe_alloc(len + 1);
     strcpy(str, DEF_OPTS);
 
@@ -100,7 +101,7 @@ parse_args(int argc, char * argv[], mod_args *ma, prefs *p)
         case 's':
             ma->mode = EINS_SERVER;
             break;
-	    
+
             // Mods
         case 't':
             for (int i = 0; Modules[i]; i++) {
@@ -135,7 +136,7 @@ parse_args(int argc, char * argv[], mod_args *ma, prefs *p)
         default:
             if (nm) {
                 if (!nm->handle_arg(opt, optarg)) {
-                    L("Invalid option for `%s'.", nm->name);
+                    L("Invalid option %c for `%s'.", opt, nm->name);
                     return NULL;
                 }
             } else {
@@ -154,7 +155,7 @@ parse_args(int argc, char * argv[], mod_args *ma, prefs *p)
     if ((ma->mode == EINS_CLIENT) && ((argc != (optind + 2)))) {
         usage_and_die();
     }
-  
+
     if (ma->mode == EINS_CLIENT) {
         ma->target = argv[optind];
         ma->size = atoi(argv[optind + 1]);
@@ -198,8 +199,8 @@ main(int argc, char **argv)
 
     if (!p.no_time) {
         // Obtain time which is spent on measuring
-        get_time(ta);
-        get_time(tb);
+        get_time(&ta);
+        get_time(&tb);
         measuredelta = time_diff(tb, ta);
     }
 
@@ -233,11 +234,11 @@ main(int argc, char **argv)
 	    double bw = ma.size / med;
 	    //bw *= (double) 15625 / 16384;
 
-            printf("%15d%16f%16f%16f\n", ma.size, med, bw, sqrt(var));
+            printf("%15d%16f%16f%16f\n", (int)ma.size, med, bw, sqrt(var));
         }
 
         nm->cleanup();
-	
+
         free(alltime);
         free(ma.payload);
 

@@ -39,11 +39,11 @@ malloc_measure()
 {
     time_586 ta, tb;
 
-    get_time(ta);
+    get_time(&ta);
     char * buf = malloc(Size);
     memcpy(buf, Payload, Size);
     free(buf);
-    get_time(tb);
+    get_time(&tb);
 
     return time_diff(tb, ta);;
 }

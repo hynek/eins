@@ -1,4 +1,4 @@
-/* 
+/*
  * eins - A tool for benchmarking networks.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
@@ -22,6 +22,7 @@
 #define MODS_H
 
 // ISO
+#include <stdint.h>
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -71,8 +72,8 @@ typedef struct {
 
 // Handshake
 typedef struct {
-    size_t tries;
-    size_t size;
+    uint32_t tries;
+    uint32_t size;
 } handshake;
 
 #endif //MODS_H

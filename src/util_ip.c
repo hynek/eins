@@ -78,13 +78,19 @@ ip_connect(char *host, char *port, struct addrinfo *hints)
     int sd;
     for (tmp = ai; tmp; tmp = tmp->ai_next) {
 	sd = socket(tmp->ai_family, tmp->ai_socktype, tmp->ai_protocol);
-	if (connect(sd, tmp->ai_addr, tmp->ai_addrlen) == 0)
-	    break;
+	if (sd == -1) {
+		L("socket: %s", strerror(errno));
+	}
+	if (connect(sd, tmp->ai_addr, tmp->ai_addrlen) == 0) {
+                break;
+	} else {
+		L("connect: %s", strerror(errno));
+	}
 	close(sd);
     }
 
     if (tmp == NULL) {
-	LE("Client: connect"); 
+	LE("Client: could not connect to the server"); 
 	return 0;
     }
 
@@ -101,7 +107,7 @@ ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, st
     char *rcv_buf = safe_alloc(size);
     
     if (__unlikely(hdr_size)) { // Use writev()/readv()
-	get_time(ta);
+	get_time(&ta);
 
 	if (__unlikely(writev(sd, hdr_vec, 2) == -1)) {
 	    LE("Client: writev"); 
@@ -113,11 +119,11 @@ ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, st
 	    exit(1);
 	}
 
-	get_time(tb);
+	get_time(&tb);
 #warning "Header code broken ATM."
 	assert(bytes == (size + hdr_size));
     } else {
-	get_time(ta);
+	get_time(&ta);
 
 	ssize_t rc;
 	for (bytes = 0; bytes < size; bytes += rc) {
@@ -138,7 +144,7 @@ ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, st
 	    }
 	}
 
-	get_time(tb);
+	get_time(&tb);
     }
 
     if (memcmp(payload, rcv_buf, size))
@@ -152,7 +158,7 @@ ip_measure(int sd, char *payload, size_t size, size_t tries, size_t hdr_size, st
 bool
 ip_handshake_client(int sd, handshake *h, size_t size)
 {
-    int response;
+    uint32_t response;
 
     if (send(sd, h, size, 0) == -1) {
 	XLE("Client: send"); 
@@ -167,7 +173,7 @@ ip_handshake_client(int sd, handshake *h, size_t size)
 bool
 ip_handshake_server(int sd, handshake *eh, size_t size)
 {
-    int response;
+    uint32_t response;
 
     if (recv(sd, eh, size, 0) == -1) {
 	LE("Server: recv");

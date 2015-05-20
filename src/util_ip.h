@@ -25,7 +25,7 @@
 
 #define IP_DEF_ADDRESS NULL
 #define IP_DEF_PORT "8910"
-#define IP_OPTS "6P:H:"
+#define IP_OPTS "6P:H:a:"
 #define IP_USAGE "\t-6: Use IPv6\n" \
     "\t-a address: Bind to `address'\n" \
     "\t-P port: Use `port'\n" \

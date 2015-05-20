@@ -1,4 +1,4 @@
-/* 
+/*
  * eins - A tool for measuring network-bandwidths and -latencies.
  * Copyright (C) 2006  Hynek Schlawack <hs+eins@ox.cx>
  *
@@ -42,13 +42,11 @@ static struct udp_prefs {
     ip_prefs ip;
 
     size_t frag_size;
-} Prefs = { { false, IP_DEF_PORT, 0 }, 0 };
+} Prefs = { { false, IP_DEF_ADDRESS, IP_DEF_PORT, 0 }, 0 };
 
 typedef struct {
     handshake h;
-    ip_handshake ip;
-    
-    size_t frag_size;
+    int32_t frag_size;
 } udp_handshake;
 
 
@@ -66,8 +64,8 @@ udp_handle_arg(char opt, char *arg)
     case 'F':
         Prefs.frag_size = atoi(arg);
         return true;
-	
-    default:       
+
+    default:
         return ip_handle_arg((ip_prefs *) &Prefs, opt, arg);
     }
 }
@@ -163,7 +161,7 @@ udp_serve(mod_args *ma)
             sin->sin_addr.s_addr = htonl(INADDR_ANY);
         }
         sin->sin_port = htons(atoi(Prefs.ip.port));
-  
+
         servaddr = (struct sockaddr *) sin;
         sock_size = sizeof(struct sockaddr_in);
     }
@@ -177,9 +175,9 @@ udp_serve(mod_args *ma)
     if (bind(sd, servaddr, sock_size) == -1) {
         XLE("Server: bind");
     }
-	
+
     struct sockaddr *from = safe_alloc(sock_size);
-    while (1) {		
+    while (1) {
         char *data;
 
         memset(from, 0, sock_size);
@@ -192,7 +190,7 @@ udp_serve(mod_args *ma)
             return 0;
         }
 
-        int response;
+        uint8_t response;
         if (uh.h.size > 0 && uh.h.tries > 0 && uh.frag_size > 0 && uh.frag_size <= uh.h.size) {
             data = safe_alloc(uh.h.size);
 
@@ -201,7 +199,7 @@ udp_serve(mod_args *ma)
                 LE("Server: sendto");
                 return false;
             }
-	    
+
         } else {
             response = 0;
             if (sendto(sd, &response, sizeof(response), 0, from, sock_size) == -1) {
@@ -213,7 +211,7 @@ udp_serve(mod_args *ma)
 
             continue;
         }
-	
+
         // Measure-loop
         for (size_t i = 0; i < uh.h.tries; i++) {
             size_t bytes;
@@ -230,8 +228,8 @@ udp_serve(mod_args *ma)
             }
 
             for (bytes = 0; bytes < uh.h.size; bytes += rc) {
-                rc = sendto(sd, data + bytes, 
-                            (bytes + uh.frag_size) > uh.h.size ? uh.h.size - bytes : uh.frag_size, 
+                rc = sendto(sd, data + bytes,
+                            (bytes + uh.frag_size) > uh.h.size ? uh.h.size - bytes : uh.frag_size,
                             0, from, sock_size);
                 if (rc == -1) {
                     LE("Server: sendto");
@@ -239,7 +237,7 @@ udp_serve(mod_args *ma)
                 }
             }
         }
-	
+
         free(data);
     }
 
