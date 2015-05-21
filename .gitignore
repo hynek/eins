@@ -1,6 +1,16 @@
 *~
 configure
 Makefile
+Makefile.in
 config
 aclocal.m4
 autom4te.cache
+config.log
+config.status
+src/.deps
+src/config.h
+src/stamp-h1
+INSTALL
+src/Makefile.in
+*.o
+src/eins

@@ -5,7 +5,7 @@ AC_INIT([eins], [0.1], [hs+eins@ox.cx])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR([src/eins.c])
 AC_CONFIG_HEADER([src/config.h])
-AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+AM_INIT_AUTOMAKE([foreign])
 
 # We need gcc for now
 AC_PROG_CC(gcc)
